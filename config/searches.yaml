@@ -1,0 +1,85 @@
+# =============================================================
+# Configuração de buscas do Vagas Monitor
+# Edite pelo painel web (python src/webapp.py) ou à mão aqui.
+# =============================================================
+
+# Empresas (tenants) do inhire a varrer. O tenant é o início do link do portal:
+#   https://programmers.inhire.app  ->  tenant = "programmers"
+# O inhire não tem busca global; por isso listamos as empresas aqui e o monitor
+# filtra pela palavra-chave de cada busca localmente. Adicione quantas quiser.
+inhire_companies:
+  # --- lista inicial ---
+  - programmers
+  - appmax
+  - portal
+  - carreiras
+  - heads
+  - hand
+  - monkey
+  - talentetech
+  - poncetech
+  - nstech
+  - auvotecnologia
+  - alice
+  - listo
+  - frameworkdigital
+  - atlastechnol
+  # --- foco em dados / analytics / eng. dados ---
+  - radix
+  - matera
+  - dp6
+  - growdev
+  - upflux
+  - skopiadigital
+  - extremegroup
+  - bernhoeft
+  - mesha
+  - ninecon
+  - objective
+  - brivia
+  - brq
+  - yandeh
+  - deloitte
+  - bigdata
+  - cora
+  - exati
+  - mazzatech
+  - limaconsulting
+  - domo
+  - bancobras
+  - mathgroup
+  - makasi
+  - unitech
+  - dtidigital
+  - qitech
+  - mjv
+  - magazineluiza
+  - anagaming
+  - zallpy
+  - queroeducacao
+  - isystems
+  # As páginas carreira.inhire.com.br/carreiras/<slug> são só landing pages;
+  # o botão "Ver vagas" aponta para o tenant normal {empresa}.inhire.app:
+  - v360
+  - zetadados
+
+# Cada item é um perfil de busca independente. Uma vaga é notificada se casar
+# com QUALQUER palavra de `keywords` e passar pelos demais filtros.
+searches:
+  - name: "Desenvolvimento Backend"
+    enabled: true
+    providers: [gupy, inhire]
+    keywords: ["desenvolvedor", "backend", "python", "node", "java"]
+    exclude_keywords: ["estágio", "estagio"]
+    seniority: [pleno, senior]        # vazio = qualquer senioridade
+    workplace_types: [remote, hybrid] # remote|hybrid|onsite; vazio = qualquer
+    locations: []                     # substrings de cidade/estado; vazio = qualquer
+
+  - name: "Dados / Analytics (remoto)"
+    enabled: false
+    providers: [gupy, inhire]
+    keywords: ["dados", "data", "analytics", "engenheiro de dados", "bi"]
+    exclude_keywords: []
+    seniority: []
+    workplace_types: [remote]
+    locations: []

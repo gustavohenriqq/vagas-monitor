@@ -1,0 +1,5 @@
+requests==2.32.3
+PyYAML==6.0.2
+Flask==3.0.3
+pytest==8.3.2
+tzdata==2026.2

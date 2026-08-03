@@ -1,0 +1,45 @@
+name: Vagas Monitor
+
+on:
+  schedule:
+    - cron: "0 11 * * *"   # 08:00 BRT (11:00 UTC), diariamente
+  workflow_dispatch:
+    inputs:
+      initial_notify:
+        description: "Notificar tudo na primeira execução"
+        default: "false"
+      send_summary:
+        description: "Enviar resumo ao final"
+        default: "true"
+
+concurrency:
+  group: vagas-monitor
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Testes
+        run: pytest -q
+      - name: Rodar monitor
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          INITIAL_NOTIFY: ${{ github.event.inputs.initial_notify || 'false' }}
+          SEND_SUMMARY: ${{ github.event.inputs.send_summary || 'true' }}
+        run: python -m src.main
+      - name: Commitar histórico se mudou
+        run: |
+          if [[ -n "$(git status --porcelain data/jobs.json)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/jobs.json
+            git commit -m "chore: atualiza histórico de vagas [skip ci]"
+            git push
+          fi
