@@ -1,5 +1,9 @@
 name: Vagas Monitor
 
+# Necessário para o passo que commita data/jobs.json de volta ao repositório.
+permissions:
+  contents: write
+
 on:
   schedule:
     - cron: "0 11 * * *"   # 08:00 BRT (11:00 UTC), diariamente
