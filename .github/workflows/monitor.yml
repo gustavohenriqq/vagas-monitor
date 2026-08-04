@@ -37,6 +37,10 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           INITIAL_NOTIFY: ${{ github.event.inputs.initial_notify || 'false' }}
           SEND_SUMMARY: ${{ github.event.inputs.send_summary || 'true' }}
+          # Teto alto: a busca de tech tem muitas palavras-chave; sem isso o Gupy
+          # pararia cedo e não cobriria o espectro inteiro de tecnologia.
+          MAX_JOBS_PER_SEARCH: "1500"
+          REQUEST_DELAY_SECONDS: "0.4"
         run: python -m src.main
       - name: Commitar histórico se mudou
         run: |
