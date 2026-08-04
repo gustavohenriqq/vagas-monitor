@@ -66,20 +66,76 @@ inhire_companies:
 # Cada item é um perfil de busca independente. Uma vaga é notificada se casar
 # com QUALQUER palavra de `keywords` e passar pelos demais filtros.
 searches:
-  - name: "Desenvolvimento Backend"
+  # ---- GUPY: todas as vagas de TECNOLOGIA ----
+  # O Gupy tem vaga de tudo (vendas, saúde, etc.), então aqui usamos uma lista
+  # ampla de termos de tech pra trazer só tecnologia. Sem filtro de senioridade,
+  # sem local e SEM excluir estágio — traz júnior, estágio, pleno, sênior, tudo.
+  - name: "Tecnologia (Gupy)"
     enabled: true
-    providers: [gupy, inhire]
-    keywords: ["desenvolvedor", "backend", "python", "node", "java"]
-    exclude_keywords: ["estágio", "estagio"]
-    seniority: [pleno, senior]        # vazio = qualquer senioridade
-    workplace_types: [remote, hybrid] # remote|hybrid|onsite; vazio = qualquer
-    locations: []                     # substrings de cidade/estado; vazio = qualquer
+    providers: [gupy]
+    keywords:
+      - "desenvolvedor"
+      - "desenvolvimento"
+      - "developer"
+      - "programador"
+      - "software"
+      - "engenheiro de software"
+      - "fullstack"
+      - "full stack"
+      - "front-end"
+      - "frontend"
+      - "back-end"
+      - "backend"
+      - "mobile"
+      - "android"
+      - "ios"
+      - "react"
+      - "node"
+      - "python"
+      - "java"
+      - ".net"
+      - "dados"
+      - "data"
+      - "analytics"
+      - "business intelligence"
+      - "cientista de dados"
+      - "engenheiro de dados"
+      - "analista de dados"
+      - "machine learning"
+      - "inteligência artificial"
+      - "qa"
+      - "teste de software"
+      - "devops"
+      - "sre"
+      - "infraestrutura"
+      - "cloud"
+      - "banco de dados"
+      - "dba"
+      - "segurança da informação"
+      - "analista de sistemas"
+      - "análise de sistemas"
+      - "suporte técnico"
+      - "product owner"
+      - "product manager"
+      - "ux"
+      - "ui"
+      - "designer"
+      - "scrum"
+      - "tecnologia"
+      - "ti"
+    exclude_keywords: []
+    seniority: []          # qualquer (inclui estágio)
+    workplace_types: []    # qualquer
+    locations: []          # qualquer
 
-  - name: "Dados / Analytics (remoto)"
-    enabled: false
-    providers: [gupy, inhire]
-    keywords: ["dados", "data", "analytics", "engenheiro de dados", "bi"]
+  # ---- INHIRE: todas as vagas das empresas de tech listadas ----
+  # As empresas do inhire_companies já são portais de tecnologia, então aqui
+  # deixamos SEM palavra-chave: traz TODAS as vagas publicadas de cada empresa.
+  - name: "inhire — todas as empresas"
+    enabled: true
+    providers: [inhire]
+    keywords: []           # vazio = todas as vagas das empresas
     exclude_keywords: []
     seniority: []
-    workplace_types: [remote]
+    workplace_types: []
     locations: []
