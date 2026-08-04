@@ -66,14 +66,13 @@ inhire_companies:
 # Cada item é um perfil de busca independente. Uma vaga é notificada se casar
 # com QUALQUER palavra de `keywords` e passar pelos demais filtros.
 searches:
-  # ---- GUPY: todas as vagas de TECNOLOGIA ----
-  # O Gupy tem vaga de tudo (vendas, saúde, etc.), então aqui usamos uma lista
-  # ampla de termos de tech pra trazer só tecnologia. Sem filtro de senioridade,
-  # sem local e SEM excluir estágio — traz júnior, estágio, pleno, sênior, tudo.
-  - name: "Tecnologia (Gupy)"
+  # ---- 1) TECH REMOTO — em qualquer lugar ----
+  # Lista ampla de termos de tech (a mesma é reaproveitada na busca 2 via âncora
+  # YAML &tech / *tech). Sem senioridade e sem excluir estágio: traz tudo.
+  - name: "Tech — Remoto"
     enabled: true
-    providers: [gupy]
-    keywords:
+    providers: [gupy, inhire]
+    keywords: &tech
       - "desenvolvedor"
       - "desenvolvimento"
       - "developer"
@@ -124,18 +123,27 @@ searches:
       - "tecnologia"
       - "ti"
     exclude_keywords: []
-    seniority: []          # qualquer (inclui estágio)
-    workplace_types: []    # qualquer
-    locations: []          # qualquer
+    seniority: []                # qualquer (inclui estágio)
+    workplace_types: [remote]    # só remoto / home office
+    locations: []                # qualquer lugar
 
-  # ---- INHIRE: todas as vagas das empresas de tech listadas ----
-  # As empresas do inhire_companies já são portais de tecnologia, então aqui
-  # deixamos SEM palavra-chave: traz TODAS as vagas publicadas de cada empresa.
-  - name: "inhire — todas as empresas"
+  # ---- 2) TECH HÍBRIDO — só BH e região metropolitana ----
+  - name: "Tech — Híbrido (BH e região)"
     enabled: true
-    providers: [inhire]
-    keywords: []           # vazio = todas as vagas das empresas
+    providers: [gupy, inhire]
+    keywords: *tech
     exclude_keywords: []
     seniority: []
-    workplace_types: []
-    locations: []
+    workplace_types: [hybrid]    # só híbrido
+    locations:                   # precisa ser em BH ou região metropolitana
+      - "belo horizonte"
+      - "minas gerais"
+      - "mg"
+      - "contagem"
+      - "betim"
+      - "nova lima"
+      - "ribeirão das neves"
+      - "santa luzia"
+      - "sabará"
+      - "vespasiano"
+      - "ibirité"
