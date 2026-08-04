@@ -135,10 +135,9 @@ searches:
     exclude_keywords: []
     seniority: []
     workplace_types: [hybrid]    # só híbrido
-    locations:                   # precisa ser em BH ou região metropolitana
+    locations:                   # precisa ser numa destas cidades (BH + região)
+      # NÃO usar "mg"/"minas gerais" aqui: casaria o estado inteiro (ex.: Uberlândia).
       - "belo horizonte"
-      - "minas gerais"
-      - "mg"
       - "contagem"
       - "betim"
       - "nova lima"
@@ -147,3 +146,16 @@ searches:
       - "sabará"
       - "vespasiano"
       - "ibirité"
+      # eixo Sete Lagoas / Pedro Leopoldo e região
+      - "sete lagoas"
+      - "pedro leopoldo"
+      - "inhaúma"
+      - "prudente de morais"
+      - "matozinhos"
+      - "capim branco"
+      - "funilândia"
+      - "caetanópolis"
+      - "lagoa santa"
+      - "confins"
+      - "jaboticatubas"
+      - "baldim"
