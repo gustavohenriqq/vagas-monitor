@@ -45,8 +45,8 @@ inhire_companies:
   - exati
   - mazzatech
   - limaconsulting
-  - domo
-  - bancobras
+  # - domo        (404 na API — subdomínio não existe; reative se souber o certo)
+  # - bancobras   (404 na API — subdomínio não existe; Bancorbrás usa outro)
   - mathgroup
   - makasi
   - unitech
