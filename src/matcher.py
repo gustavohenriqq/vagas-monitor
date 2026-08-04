@@ -13,10 +13,23 @@ Comparações são feitas sem acento e em minúsculas (via models.normalize).
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
+from functools import lru_cache
 
 from .models import JobPosting, normalize
 from .searches import SearchProfile
+
+
+@lru_cache(maxsize=1024)
+def _compile_term(term_norm: str) -> "re.Pattern":
+    """Compila o termo com fronteira de 'palavra' (alfanumérico) nas bordas.
+
+    Assim 'ti' casa 'analista de ti' mas não 'logística'; 'python' casa
+    'desenvolvedor python' mas não 'pythonista'. Termos com espaço/pontuação
+    (ex.: 'engenheiro de dados', '.net') também funcionam.
+    """
+    return re.compile(r"(?<![0-9a-z])" + re.escape(term_norm) + r"(?![0-9a-z])")
 
 
 @dataclass
@@ -31,11 +44,11 @@ class MatchResult:
 
 
 def _any_in(terms: list[str], blob: str) -> list[str]:
-    """Retorna os termos (normalizados) presentes no blob."""
+    """Retorna os termos presentes no blob, casando por fronteira de palavra."""
     hits = []
     for term in terms:
         norm = normalize(term)
-        if norm and norm in blob:
+        if norm and _compile_term(norm).search(blob):
             hits.append(term)
     return hits
 

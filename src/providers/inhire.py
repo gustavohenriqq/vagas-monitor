@@ -41,8 +41,41 @@ logger = logging.getLogger(__name__)
 
 INHIRE_PAGES_URL = "https://api.inhire.app/job-posts/public/pages"
 
-# Chaves onde a lista de vagas pode aparecer no payload.
-_JOB_LIST_KEYS = ("jobPosts", "jobPostings", "jobs", "vacancies", "vagas", "data", "items", "results")
+# Chaves onde a lista de vagas pode aparecer no payload. `jobsPage` é a real
+# (observada na API pública); as demais ficam como fallback defensivo.
+_JOB_LIST_KEYS = ("jobsPage", "jobPosts", "jobPostings", "jobs", "vacancies", "vagas", "data", "items", "results")
+
+# Status considerados "vaga aberta" (o restante — draft, closed — é ignorado).
+_OPEN_STATUS = ("published", "publicada", "aberta", "open", "active", "")
+
+# Códigos de país -> nome amigável para exibição.
+_COUNTRY_NAMES = {"BR": "Brasil", "PT": "Portugal", "US": "EUA", "SG": "Singapura"}
+
+
+def _parse_location(loc) -> tuple[str, str, str]:
+    """Interpreta o campo location. Aceita string ('Rio de Janeiro, RJ, BR',
+    'BR') ou dict ({city, state}). Retorna (city, state, country)."""
+    if isinstance(loc, dict):
+        return (
+            str(loc.get("city") or "").strip(),
+            str(loc.get("state") or loc.get("uf") or "").strip(),
+            str(loc.get("country") or "").strip(),
+        )
+    parts = [p.strip() for p in str(loc or "").split(",") if p.strip()]
+    if not parts:
+        return "", "", ""
+    if len(parts) == 1:
+        # Um único token curto (ex.: 'BR') é país; caso contrário, cidade.
+        only = parts[0]
+        return ("", "", only) if len(only) <= 3 else (only, "", "")
+    if len(parts) == 2:
+        return parts[0], "", parts[1]
+    return parts[0], parts[1], parts[-1]
+
+
+def _country_name(code: str) -> str:
+    code = str(code or "").strip()
+    return _COUNTRY_NAMES.get(code.upper(), code)
 
 
 def _first(item: dict, *keys, default=""):
@@ -92,7 +125,7 @@ def _find_job_list(payload) -> list:
     if isinstance(payload, list):
         # lista de vagas direta ou lista de páginas
         if payload and isinstance(payload[0], dict) and any(
-            k in payload[0] for k in ("title", "name", "jobName")
+            k in payload[0] for k in ("title", "name", "jobName", "displayName")
         ):
             return payload
         for page in payload:
@@ -107,7 +140,7 @@ def _find_job_list(payload) -> list:
             if isinstance(value, list) and value:
                 # confirma que parece uma lista de vagas
                 if isinstance(value[0], dict) and any(
-                    k in value[0] for k in ("title", "name", "jobName", "id", "slug")
+                    k in value[0] for k in ("title", "name", "jobName", "displayName", "jobId", "id", "slug")
                 ):
                     return value
         # procura recursivamente em subdicionários (ex.: page -> jobPosts)
@@ -135,36 +168,44 @@ def _job_url(tenant: str, item: dict) -> str:
 
 
 def parse_jobs(payload, tenant: str, company_name: str = "") -> list[JobPosting]:
-    """Converte a resposta do inhire em JobPosting para um tenant."""
-    items = _find_job_list(payload)
-    jobs: list[JobPosting] = []
+    """Converte a resposta pública do inhire em JobPosting para um tenant.
 
+    Formato real (endpoint /job-posts/public/pages):
+        {"tenantName": "Radix", "jobsPage": [
+            {"jobId", "displayName", "status", "workplaceType", "location"}, ...]}
+    """
+    company = company_name
+    items = None
+    if isinstance(payload, dict):
+        company = company or str(payload.get("tenantName") or "").strip()
+        items = payload.get("jobsPage")
+    if not isinstance(items, list):
+        items = _find_job_list(payload)  # fallback para outros formatos
+    company = company or tenant
+
+    jobs: list[JobPosting] = []
     for item in items:
         if not isinstance(item, dict):
             continue
-        title = str(_first(item, "title", "name", "jobName", "role", default="")).strip()
+
+        status = str(item.get("status") or "").strip().lower()
+        if status and status not in _OPEN_STATUS:
+            continue  # ignora rascunho/encerrada
+
+        title = str(_first(item, "displayName", "title", "name", "jobName", "role", default="")).strip()
         if not title:
             continue
 
-        job_id = str(_first(item, "id", "jobId", "uuid", "jobPostId", "slug", default="")).strip()
-
-        # local pode vir como string ou objeto {city, state}
-        location = _first(item, "location", "city", "address", default="")
-        city = state = ""
-        if isinstance(location, dict):
-            city = str(location.get("city") or "").strip()
-            state = str(location.get("state") or location.get("uf") or "").strip()
-        else:
-            city = str(location or "").strip()
+        job_id = str(_first(item, "jobId", "id", "uuid", "jobPostId", "slug", default="")).strip()
+        city, state, country = _parse_location(_first(item, "location", "city", "address", default=""))
+        if not state:
             state = str(_first(item, "state", "uf", default="")).strip()
 
         workplace = _map_workplace(
-            _first(item, "workModel", "workplaceType", "modality", "workType", "remote", default="")
+            _first(item, "workplaceType", "workModel", "modality", "workType", "remote", default="")
         )
         if workplace == WORKPLACE_UNKNOWN and item.get("isRemote") is True:
             workplace = REMOTE
-
-        company = company_name or str(_first(item, "companyName", "company", default="")).strip() or tenant
 
         jobs.append(
             JobPosting(
@@ -176,7 +217,7 @@ def parse_jobs(payload, tenant: str, company_name: str = "") -> list[JobPosting]
                 description=_clean_html(_first(item, "description", "descriptionText", "about", default=""))[:5000],
                 city=city,
                 state=state,
-                country=str(_first(item, "country", default="Brasil")).strip(),
+                country=_country_name(country) or "Brasil",
                 workplace_type=workplace,
                 seniority=_map_seniority(_first(item, "seniority", "seniorityLevel", "level", default="")),
                 published_date=str(_first(item, "publishedAt", "publishedDate", "createdAt", default="")).strip(),

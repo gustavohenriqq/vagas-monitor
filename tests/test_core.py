@@ -23,13 +23,17 @@ GUPY_PAYLOAD = {
     "pagination": {"total": 2, "limit": 100, "offset": 0},
 }
 
+# Formato real do endpoint público /job-posts/public/pages (observado na Radix).
 INHIRE_PAYLOAD = {
-    "page": {"name": "Programmers", "jobPosts": [
-        {"id": "a1", "slug": "dev-py-sr", "title": "Dev Python Sênior", "description": "Django",
-         "seniority": "Sênior", "workModel": "remote"},
-        {"id": "a2", "title": "Analista de Dados Júnior", "seniority": "Júnior", "workModel": "hybrid",
-         "location": {"city": "Recife", "state": "PE"}},
-    ]}
+    "tenantName": "Radix",
+    "jobsPage": [
+        {"jobId": "a1", "displayName": "Profissional Cientista de Dados Sênior",
+         "status": "published", "workplaceType": "Remote", "location": "BR"},
+        {"jobId": "a2", "displayName": "Estágio em Controladoria",
+         "status": "published", "workplaceType": "Hybrid", "location": "Rio de Janeiro, RJ, BR"},
+        {"jobId": "a3", "displayName": "Vaga em rascunho",
+         "status": "draft", "workplaceType": "Remote", "location": "BR"},
+    ],
 }
 
 
@@ -45,13 +49,15 @@ def test_gupy_parse_fields():
 
 
 def test_inhire_find_and_parse():
-    assert len(_find_job_list(INHIRE_PAYLOAD)) == 2
-    jobs = inhire_parse(INHIRE_PAYLOAD, "programmers")
-    assert len(jobs) == 2
+    jobs = inhire_parse(INHIRE_PAYLOAD, "radix")
+    assert len(jobs) == 2                        # rascunho (draft) é descartado
+    assert jobs[0].company == "Radix"            # vem do tenantName
     assert jobs[0].seniority == "senior"
     assert jobs[0].workplace_type == REMOTE
-    assert jobs[0].url == "https://programmers.inhire.app/vagas/a1/dev-py-sr"
-    assert jobs[1].city == "Recife" and jobs[1].state == "PE"
+    assert jobs[0].url == "https://radix.inhire.app/vagas/a1"
+    assert jobs[1].seniority == "estagio"
+    assert jobs[1].workplace_type == HYBRID
+    assert jobs[1].city == "Rio de Janeiro" and jobs[1].state == "RJ"
 
 
 def test_seniority_inference():
@@ -63,7 +69,7 @@ def test_seniority_inference():
 
 
 def test_matcher_keyword_and_exclude():
-    jobs = gupy_parse(GUPY_PAYLOAD) + inhire_parse(INHIRE_PAYLOAD, "programmers")
+    jobs = gupy_parse(GUPY_PAYLOAD) + inhire_parse(INHIRE_PAYLOAD, "radix")
     prof = SearchProfile(
         name="t", keywords=["desenvolvedor", "python", "dados"],
         exclude_keywords=["estágio"], seniority=["pleno", "senior"],
@@ -71,9 +77,9 @@ def test_matcher_keyword_and_exclude():
     )
     titles = [j.title for j in jobs if matches(j, prof).matched]
     assert "Desenvolvedor Backend Pleno" in titles
-    assert "Dev Python Sênior" in titles
-    assert "Estágio em QA" not in titles          # excluído por keyword e senioridade
-    assert "Analista de Dados Júnior" not in titles  # senioridade fora do filtro
+    assert "Profissional Cientista de Dados Sênior" in titles
+    assert "Estágio em QA" not in titles                # excluído por keyword/senioridade
+    assert "Estágio em Controladoria" not in titles     # excluído por keyword
 
 
 def test_matcher_empty_keywords_accepts_all_non_excluded():
