@@ -7,8 +7,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.providers.gupy import parse_jobs as gupy_parse
 from src.providers.inhire import parse_jobs as inhire_parse, _find_job_list
+from src.providers.wwr import parse_feed as wwr_parse
 from src.matcher import matches
-from src.models import infer_seniority, REMOTE, HYBRID
+from src.models import infer_seniority, JobPosting, REMOTE, HYBRID
+from src.relevance import classify_title, evaluate, CONF_ALTA, CONF_MEDIA, CONF_BAIXA
 from src.searches import SearchProfile
 
 
@@ -86,3 +88,84 @@ def test_matcher_empty_keywords_accepts_all_non_excluded():
     jobs = gupy_parse(GUPY_PAYLOAD)
     prof = SearchProfile(name="t", keywords=[], exclude_keywords=[])
     assert len(jobs) == len([j for j in jobs if matches(j, prof).matched])
+
+
+# ---------------------------------------------------------------- 3 níveis + score
+def test_classify_title_levels():
+    assert classify_title("Desenvolvedor Backend Pleno").level == CONF_ALTA
+    assert classify_title("Engenheiro de Dados").level == CONF_ALTA
+    assert classify_title("Analista de Dados Júnior").level == CONF_ALTA   # cargo de dados é forte
+    # ambíguo sozinho não passa; com qualificador de tech, vira MÉDIA
+    assert classify_title("Analista Júnior").passes is False
+    assert classify_title("Coordenador de Tecnologia").level == CONF_MEDIA
+    # ferramenta sozinha não passa; com cargo junto, passa
+    assert classify_title("Power BI").passes is False
+    assert classify_title("Analista de Power BI").level in (CONF_MEDIA, CONF_BAIXA)
+    # cargo não-tech é rejeitado
+    assert classify_title("Analista Financeiro").passes is False
+    assert classify_title("Engenheiro de Manutenção HVAC").passes is False
+
+
+def test_score_prioritizes_remote_strong_role():
+    remoto = JobPosting(provider="gupy", external_id="1", title="Engenheiro de Dados Sênior",
+                        company="X", url="u", workplace_type=REMOTE)
+    presencial = JobPosting(provider="gupy", external_id="2", title="Analista de Dados",
+                            company="X", url="u")
+    r1, r2 = evaluate(remoto), evaluate(presencial)
+    assert r1.passes and r2.passes
+    assert r1.score >= 7          # cargo forte + remoto + senioridade => alta prioridade
+    assert r1.score > r2.score
+
+
+def test_precise_matcher_uses_three_levels():
+    tech = JobPosting(provider="gupy", external_id="1", title="Desenvolvedor Python",
+                      company="X", url="u", workplace_type=REMOTE)
+    nao_tech = JobPosting(provider="inhire", external_id="2", title="Engenheiro de Manutenção HVAC",
+                          company="Radix", url="u", workplace_type=REMOTE)
+    prof = SearchProfile(name="t", precise=True, keywords=[], workplace_types=["remote"])
+    assert matches(tech, prof).matched is True
+    assert matches(nao_tech, prof).matched is False
+
+
+# ---------------------------------------------------------------- WWR (RSS)
+WWR_RSS = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+ <item>
+  <title>Acme Corp: Senior Backend Engineer</title>
+  <region>Latin America</region>
+  <category>Back-End Programming</category>
+  <link>https://weworkremotely.com/remote-jobs/acme-senior-backend-engineer</link>
+  <description>&lt;p&gt;Python and Go&lt;/p&gt;</description>
+  <pubDate>Mon, 18 Aug 2026 10:00:00 +0000</pubDate>
+ </item>
+ <item>
+  <title>Globex: Growth Marketer</title>
+  <region>USA Only</region>
+  <link>https://weworkremotely.com/remote-jobs/globex-growth</link>
+  <description>marketing</description>
+ </item>
+</channel></rss>"""
+
+
+def test_wwr_parse_feed():
+    jobs = wwr_parse(WWR_RSS)
+    assert len(jobs) == 2
+    j = jobs[0]
+    assert j.provider == "wwr"
+    assert j.company == "Acme Corp"
+    assert j.title == "Senior Backend Engineer"
+    assert j.workplace_type == REMOTE
+    assert j.country == "Latin America"
+    assert j.url.endswith("acme-senior-backend-engineer")
+
+
+def test_wwr_international_filter_and_precision():
+    jobs = wwr_parse(WWR_RSS)
+    prof = SearchProfile(
+        name="intl", precise=True, providers=["wwr"], keywords=[],
+        workplace_types=["remote"],
+        locations=["anywhere", "latin america", "americas"],
+    )
+    titles = [j.title for j in jobs if matches(j, prof).matched]
+    assert "Senior Backend Engineer" in titles   # tech + Latin America
+    assert "Growth Marketer" not in titles        # não-tech (e USA Only)

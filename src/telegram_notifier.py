@@ -80,14 +80,22 @@ class Summary:
     per_provider: dict         # {provider: count}
 
 
-def build_job_message(job: JobPosting, search_name: str = "") -> str:
-    """Monta a mensagem HTML de uma vaga nova."""
-    provider = _PROVIDER_LABEL.get(job.provider, job.provider)
+_PROVIDER_LABEL_WWR = {"gupy": "Gupy", "inhire": "inhire", "wwr": "We Work Remotely"}
+
+
+def build_job_message(job: JobPosting, search_name: str = "",
+                      score: int | None = None, reasons: list[str] | None = None) -> str:
+    """Monta a mensagem HTML de uma vaga nova (alta relevância)."""
+    provider = _PROVIDER_LABEL_WWR.get(job.provider, job.provider)
     workplace = _WORKPLACE_LABEL.get(job.workplace_type, "📍 " + (job.location_label or "Local não informado"))
     seniority = _SENIORITY_LABEL.get(job.seniority, "")
 
+    header = "🚨 <b>NOVA VAGA</b>"
+    if score is not None:
+        header += f"   ⭐ <b>{score}/10</b>"
+
     linhas = [
-        "🚨 <b>NOVA VAGA</b>",
+        header,
         "",
         f"💼 <b>{_esc(job.title)}</b>",
         f"🏢 <b>Empresa:</b> {_esc(job.company) or 'não informada'}",
@@ -99,10 +107,30 @@ def build_job_message(job: JobPosting, search_name: str = "") -> str:
         linhas.append(f"📍 <b>Local:</b> {_esc(job.location_label)}")
     if job.deadline:
         linhas.append(f"⏳ <b>Prazo:</b> {_esc(job.deadline)}")
+    if reasons:
+        linhas.append(f"✅ <b>Por quê:</b> {_esc(', '.join(reasons[:3]))}")
     if search_name:
         linhas.append(f"🔎 <b>Busca:</b> {_esc(search_name)}")
     linhas.append("")
     linhas.append(f"🔗 {_esc(job.url)}")
+    return "\n".join(linhas)
+
+
+def build_digest_message(items: list[dict]) -> str:
+    """
+    Monta o digest ranqueado. `items`: lista de dicts com score/title/company/
+    location/provider/url, já ordenada (melhor primeiro).
+    """
+    linhas = [f"📋 <b>DIGEST — {len(items)} vaga(s) de menor prioridade</b>",
+              "<i>as de alta relevância já chegaram na hora</i>", ""]
+    for it in items[:40]:
+        prov = _PROVIDER_LABEL_WWR.get(it.get("provider", ""), it.get("provider", ""))
+        linhas.append(
+            f"⭐ <b>{it.get('score', 0)}</b> · <a href=\"{_esc(it.get('url',''))}\">{_esc(it.get('title',''))}</a>"
+            f" — {_esc(it.get('company') or 's/ empresa')} ({_esc(it.get('location',''))}, {_esc(prov)})"
+        )
+    if len(items) > 40:
+        linhas.append(f"\n… e mais {len(items) - 40} vaga(s).")
     return "\n".join(linhas)
 
 
@@ -192,8 +220,14 @@ class TelegramNotifier:
         logger.error("Falha definitiva ao enviar mensagem após %d tentativas.", MAX_RETRIES)
         return False
 
-    def notify_job(self, job: JobPosting, search_name: str = "") -> bool:
-        return self._send(build_job_message(job, search_name))
+    def notify_job(self, job: JobPosting, search_name: str = "",
+                   score: int | None = None, reasons: list[str] | None = None) -> bool:
+        return self._send(build_job_message(job, search_name, score, reasons))
+
+    def send_digest(self, items: list[dict]) -> bool:
+        if not items:
+            return True
+        return self._send(build_digest_message(items))
 
     def send_summary(self, summary: Summary, send_empty: bool = False) -> bool:
         if summary.new_count == 0 and not send_empty:
@@ -208,8 +242,13 @@ class TelegramNotifier:
 class _NoopNotifier:
     """Usado quando o Telegram não está configurado: só registra no log."""
 
-    def notify_job(self, job: JobPosting, search_name: str = "") -> bool:
-        logger.info("[noop] Vaga não notificada: %s (%s)", job.title, job.company)
+    def notify_job(self, job: JobPosting, search_name: str = "",
+                   score: int | None = None, reasons: list[str] | None = None) -> bool:
+        logger.info("[noop] Vaga não notificada: %s (%s) score=%s", job.title, job.company, score)
+        return True
+
+    def send_digest(self, items: list[dict]) -> bool:
+        logger.info("[noop] Digest não enviado: %d vagas.", len(items))
         return True
 
     def send_summary(self, summary: Summary, send_empty: bool = False) -> bool:

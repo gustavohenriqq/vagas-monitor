@@ -71,6 +71,8 @@ searches:
   # YAML &tech / *tech). Sem senioridade e sem excluir estágio: traz tudo.
   - name: "Tech — Remoto"
     enabled: true
+    profile: brasil
+    precise: true                # usa filtro de 3 níveis (cargo no título)
     providers: [gupy, inhire]
     keywords: &tech
       - "desenvolvedor"
@@ -127,6 +129,8 @@ searches:
   # ---- 2) TECH HÍBRIDO — só BH e região metropolitana ----
   - name: "Tech — Híbrido (BH e região)"
     enabled: true
+    profile: brasil
+    precise: true
     providers: [gupy, inhire]
     keywords: *tech
     exclude_keywords: []
@@ -156,3 +160,24 @@ searches:
       - "confins"
       - "jaboticatubas"
       - "baldim"
+
+  # ---- 3) PERFIL INTERNACIONAL — remoto aberto ao Brasil/LatAm (PT/ES) ----
+  # Fonte: We Work Remotely (RSS). Só regiões que aceitam candidatos de fora dos
+  # EUA/Europa (Anywhere / Latin America / Americas). Filtro de 3 níveis ligado.
+  - name: "Internacional — Remoto (PT/ES)"
+    enabled: true
+    profile: internacional
+    precise: true
+    providers: [wwr]
+    keywords: []                 # o filtro de 3 níveis já garante que é tech
+    exclude_keywords: []
+    seniority: []
+    workplace_types: [remote]
+    locations:                   # region do WWR que aceita Brasil/LatAm
+      - "anywhere"
+      - "latin america"
+      - "americas"
+      - "worldwide"
+      - "brazil"
+      - "south america"
+      - "latam"

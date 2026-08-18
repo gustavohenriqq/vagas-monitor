@@ -63,9 +63,18 @@ def matches(job: JobPosting, profile: SearchProfile) -> MatchResult:
         if excluded:
             return MatchResult(False, f"excluída por: {', '.join(excluded)}")
 
-    # 1. Palavras-chave (se vazio, aceita qualquer)
+    # 1. Relevância — modo preciso (filtro de 3 níveis) OU palavra-chave solta.
     matched_kw: list[str] = []
-    if profile.keywords:
+    if profile.precise:
+        # Import tardio para evitar ciclo (relevance -> models apenas).
+        from .relevance import classify_title
+        conf = classify_title(job.title)
+        if not conf.passes:
+            return MatchResult(False, f"filtro 3 níveis: {conf.reason}")
+        # Se também houver keywords, elas restringem ainda mais (opcional).
+        if profile.keywords and not _any_in(profile.keywords, blob):
+            return MatchResult(False, "nenhuma palavra-chave encontrada")
+    elif profile.keywords:
         matched_kw = _any_in(profile.keywords, blob)
         if not matched_kw:
             return MatchResult(False, "nenhuma palavra-chave encontrada")

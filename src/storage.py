@@ -32,8 +32,11 @@ class JobRecord:
     job: JobPosting
     first_seen_at: str
     last_seen_at: str
-    notification_status: str = "pending"    # pending | sent | skipped
+    notification_status: str = "pending"    # pending | sent | skipped | digest
     matched_searches: list[str] = field(default_factory=list)
+    score: int = 0
+    confidence: str = ""                     # alta | media | baixa
+    profile: str = "brasil"
 
     def to_dict(self) -> dict:
         d = self.job.to_dict()
@@ -43,6 +46,9 @@ class JobRecord:
             "last_seen_at": self.last_seen_at,
             "notification_status": self.notification_status,
             "matched_searches": self.matched_searches,
+            "score": self.score,
+            "confidence": self.confidence,
+            "profile": self.profile,
         })
         return d
 
@@ -56,6 +62,9 @@ class JobRecord:
             last_seen_at=data.get("last_seen_at", ""),
             notification_status=data.get("notification_status", "pending"),
             matched_searches=data.get("matched_searches", []),
+            score=data.get("score", 0),
+            confidence=data.get("confidence", ""),
+            profile=data.get("profile", "brasil"),
         )
 
 
