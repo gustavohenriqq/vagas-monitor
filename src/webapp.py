@@ -25,14 +25,14 @@ if __package__ in (None, ""):
     from src.config import load_config
     from src.matcher import matches
     from src.monitor import run, setup_logging, collect_for_search
-    from src.providers import GupyProvider, InhireProvider, build_session
+    from src.providers import GupyProvider, InhireProvider, WwrProvider, build_session
     from src.searches import SearchProfile, SearchesFile, load_searches, save_searches, VALID_PROVIDERS, VALID_SENIORITY, VALID_WORKPLACE
     from src.storage import load_history
 else:
     from .config import load_config
     from .matcher import matches
     from .monitor import run, setup_logging, collect_for_search
-    from .providers import GupyProvider, InhireProvider, build_session
+    from .providers import GupyProvider, InhireProvider, WwrProvider, build_session
     from .searches import SearchProfile, SearchesFile, load_searches, save_searches, VALID_PROVIDERS, VALID_SENIORITY, VALID_WORKPLACE
     from .storage import load_history
 
@@ -265,12 +265,13 @@ def preview(idx: int):
     session = build_session()
     gupy = GupyProvider(session=session, delay=CONFIG.request_delay_seconds)
     inhire = InhireProvider(tenants=data.inhire_companies, session=session, delay=CONFIG.request_delay_seconds)
+    wwr = WwrProvider(session=session, delay=CONFIG.request_delay_seconds)
     try:
-        jobs = collect_for_search(profile, gupy=gupy, inhire=inhire,
+        jobs = collect_for_search(profile, gupy=gupy, inhire=inhire, wwr=wwr,
                                   max_jobs=min(CONFIG.max_jobs_per_search, 60),
                                   inhire_companies=data.inhire_companies)
     finally:
-        gupy.close(); inhire.close()
+        gupy.close(); inhire.close(); wwr.close()
     return render(PREVIEW_BODY, name=profile.name, jobs=jobs)
 
 

@@ -32,7 +32,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-VALID_PROVIDERS = ("gupy", "inhire")
+VALID_PROVIDERS = ("gupy", "inhire", "wwr")
 VALID_WORKPLACE = ("remote", "hybrid", "onsite")
 VALID_SENIORITY = ("estagio", "junior", "pleno", "senior", "lead", "indefinido")
 
@@ -51,11 +51,17 @@ class SearchProfile:
     seniority: list[str] = field(default_factory=list)
     workplace_types: list[str] = field(default_factory=list)
     locations: list[str] = field(default_factory=list)
+    # precise=True: usa o filtro de 3 níveis (cargo no título) em vez de só
+    # palavra-chave solta. profile: rótulo do perfil (brasil | internacional).
+    precise: bool = False
+    profile: str = "brasil"
 
     def to_dict(self) -> dict:
         return {
             "name": self.name,
             "enabled": self.enabled,
+            "profile": self.profile,
+            "precise": self.precise,
             "providers": self.providers,
             "keywords": self.keywords,
             "exclude_keywords": self.exclude_keywords,
@@ -88,6 +94,8 @@ class SearchProfile:
             seniority=[s.lower() for s in _as_list(data.get("seniority")) if s.lower() in VALID_SENIORITY],
             workplace_types=[w.lower() for w in _as_list(data.get("workplace_types")) if w.lower() in VALID_WORKPLACE],
             locations=_as_list(data.get("locations")),
+            precise=bool(data.get("precise", False)),
+            profile=str(data.get("profile") or "brasil").strip().lower(),
         )
 
 

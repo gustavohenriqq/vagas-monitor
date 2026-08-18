@@ -102,6 +102,8 @@ class Config:
     initial_notify: bool = False
     send_summary: bool = False
     send_empty_summary: bool = False
+    send_digest: bool = False          # envia o digest ranqueado nesta execução
+    high_score_threshold: int = 7      # score >= isto notifica na hora; abaixo vai pro digest
 
     max_jobs_per_search: int = 200
     request_delay_seconds: float = 1.0
@@ -134,6 +136,8 @@ def load_config(env_path: Optional[Path] = DEFAULT_ENV_PATH) -> Config:
         initial_notify=_env_bool("INITIAL_NOTIFY", False),
         send_summary=_env_bool("SEND_SUMMARY", False),
         send_empty_summary=_env_bool("SEND_EMPTY_SUMMARY", False),
+        send_digest=_env_bool("SEND_DIGEST", False),
+        high_score_threshold=_env_int("HIGH_SCORE_THRESHOLD", 7, min_val=0),
         max_jobs_per_search=_env_int("MAX_JOBS_PER_SEARCH", 200, min_val=1),
         request_delay_seconds=delay,
         log_level=_env_str("LOG_LEVEL", "INFO").upper(),
