@@ -77,6 +77,12 @@ greenhouse_companies:
   - brex
   - discord
 
+# Empresas do Recrutei. O slug é o trecho do link público:
+#   https://jobs.recrutei.com.br/digisystem  ->  slug = "digisystem"
+# (Só entra em ação quando a URL do endpoint público for confirmada no código.)
+recrutei_companies:
+  - digisystem
+
 # Cada item é um perfil de busca independente. Uma vaga é notificada se casar
 # com QUALQUER palavra de `keywords` e passar pelos demais filtros.
 searches:
@@ -87,7 +93,7 @@ searches:
     enabled: true
     profile: brasil
     precise: true                # usa filtro de 3 níveis (cargo no título)
-    providers: [gupy, inhire]
+    providers: [gupy, inhire, recrutei]
     keywords: &tech
       - "desenvolvedor"
       - "desenvolvimento"
@@ -145,7 +151,7 @@ searches:
     enabled: true
     profile: brasil
     precise: true
-    providers: [gupy, inhire]
+    providers: [gupy, inhire, recrutei]
     keywords: *tech
     exclude_keywords: []
     seniority: []

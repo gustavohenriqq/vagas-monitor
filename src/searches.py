@@ -32,7 +32,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-VALID_PROVIDERS = ("gupy", "inhire", "wwr", "greenhouse")
+VALID_PROVIDERS = ("gupy", "inhire", "wwr", "greenhouse", "recrutei")
 VALID_WORKPLACE = ("remote", "hybrid", "onsite")
 VALID_SENIORITY = ("estagio", "junior", "pleno", "senior", "lead", "indefinido")
 
@@ -105,12 +105,14 @@ class SearchesFile:
 
     inhire_companies: list[str] = field(default_factory=list)
     greenhouse_companies: list[str] = field(default_factory=list)
+    recrutei_companies: list[str] = field(default_factory=list)
     searches: list[SearchProfile] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
             "inhire_companies": self.inhire_companies,
             "greenhouse_companies": self.greenhouse_companies,
+            "recrutei_companies": self.recrutei_companies,
             "searches": [s.to_dict() for s in self.searches],
         }
 
@@ -134,12 +136,16 @@ def load_searches(path: Path = DEFAULT_SEARCHES_PATH) -> SearchesFile:
     gh_raw = raw.get("greenhouse_companies") or []
     gh = [str(c).strip() for c in gh_raw if str(c).strip()]
 
+    rec_raw = raw.get("recrutei_companies") or []
+    rec = [str(c).strip() for c in rec_raw if str(c).strip()]
+
     searches_raw = raw.get("searches") or []
     searches = [SearchProfile.from_dict(item) for item in searches_raw if isinstance(item, dict)]
 
-    logger.info("Config carregada: %d buscas, %d empresas inhire, %d boards greenhouse.",
-                len(searches), len(companies), len(gh))
-    return SearchesFile(inhire_companies=companies, greenhouse_companies=gh, searches=searches)
+    logger.info("Config carregada: %d buscas | inhire:%d greenhouse:%d recrutei:%d.",
+                len(searches), len(companies), len(gh), len(rec))
+    return SearchesFile(inhire_companies=companies, greenhouse_companies=gh,
+                        recrutei_companies=rec, searches=searches)
 
 
 def save_searches(data: SearchesFile, path: Path = DEFAULT_SEARCHES_PATH) -> None:

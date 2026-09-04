@@ -5,8 +5,9 @@ from .gupy import GupyProvider
 from .inhire import InhireProvider
 from .wwr import WwrProvider
 from .greenhouse import GreenhouseProvider
+from .recrutei import RecruteiProvider
 
 __all__ = [
     "JobProvider", "build_session", "GupyProvider", "InhireProvider",
-    "WwrProvider", "GreenhouseProvider",
+    "WwrProvider", "GreenhouseProvider", "RecruteiProvider",
 ]

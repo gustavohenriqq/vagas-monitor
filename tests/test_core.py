@@ -9,6 +9,7 @@ from src.providers.gupy import parse_jobs as gupy_parse
 from src.providers.inhire import parse_jobs as inhire_parse, _find_job_list
 from src.providers.wwr import parse_feed as wwr_parse
 from src.providers.greenhouse import parse_jobs as gh_parse
+from src.providers.recrutei import parse_jobs as rec_parse
 from src.matcher import matches
 from src.models import infer_seniority, JobPosting, REMOTE, HYBRID
 from src.relevance import classify_title, evaluate, CONF_ALTA, CONF_MEDIA, CONF_BAIXA
@@ -182,6 +183,31 @@ def test_greenhouse_parse():
     titles = [j.title for j in jobs if matches(j, prof).matched]
     assert "Senior Backend Engineer" in titles
     assert "Office Manager" not in titles
+
+
+def test_recrutei_parse_grouped():
+    payload = {"data": {"total": 3, "vacancies": [
+        {"department": "Governo", "items": [
+            {"id": 1, "title": "Desenvolvedor Backend Java Senior", "company_name": "Digisystem",
+             "location": ["Brasil"], "public_link": "https://jobs.recrutei.com.br/digisystem/vacancy/1-x"},
+            {"id": 2, "title": "Recepção", "company_name": "Digisystem",
+             "location": ["São Paulo", "SP", "Brasil"], "public_link": "https://jobs.recrutei.com.br/digisystem/vacancy/2-y"},
+        ]},
+        {"department": "Corporativo", "items": [
+            {"id": 3, "title": "Analista de Dados", "company_name": "Digisystem",
+             "location": ["Belo Horizonte", "MG", "Brasil"], "public_link": "https://jobs.recrutei.com.br/digisystem/vacancy/3-z"},
+        ]},
+    ]}}
+    jobs = rec_parse(payload, "digisystem")
+    assert len(jobs) == 3                       # achata os dois departamentos
+    by_title = {j.title: j for j in jobs}
+    assert by_title["Desenvolvedor Backend Java Senior"].workplace_type == REMOTE   # só "Brasil"
+    assert by_title["Recepção"].city == "São Paulo"
+    assert by_title["Analista de Dados"].state == "MG"
+    # filtro remoto + tech: só o dev remoto entra
+    prof = SearchProfile(name="r", precise=True, providers=["recrutei"], workplace_types=["remote"])
+    titles = [j.title for j in jobs if matches(j, prof).matched]
+    assert titles == ["Desenvolvedor Backend Java Senior"]
 
 
 def test_wwr_international_filter_and_precision():
