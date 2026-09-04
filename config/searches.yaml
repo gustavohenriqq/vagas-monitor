@@ -63,6 +63,20 @@ inhire_companies:
   - v360
   - zetadados
 
+# Boards (empresas) do Greenhouse. O token é o trecho do link público:
+#   https://job-boards.greenhouse.io/<token>  ->  token = "coinbase"
+# São majoritariamente internacionais/remote-friendly (bom pro perfil PT/ES).
+# Adicione as empresas que te interessam. Tokens inválidos são só ignorados.
+greenhouse_companies:
+  - coinbase
+  - gitlab
+  - dropbox
+  - reddit
+  - cloudflare
+  - robinhood
+  - brex
+  - discord
+
 # Cada item é um perfil de busca independente. Uma vaga é notificada se casar
 # com QUALQUER palavra de `keywords` e passar pelos demais filtros.
 searches:
@@ -168,7 +182,7 @@ searches:
     enabled: true
     profile: internacional
     precise: true
-    providers: [wwr]
+    providers: [wwr, greenhouse]
     keywords: []                 # o filtro de 3 níveis já garante que é tech
     exclude_keywords: []
     seniority: []

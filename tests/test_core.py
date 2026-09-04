@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.providers.gupy import parse_jobs as gupy_parse
 from src.providers.inhire import parse_jobs as inhire_parse, _find_job_list
 from src.providers.wwr import parse_feed as wwr_parse
+from src.providers.greenhouse import parse_jobs as gh_parse
 from src.matcher import matches
 from src.models import infer_seniority, JobPosting, REMOTE, HYBRID
 from src.relevance import classify_title, evaluate, CONF_ALTA, CONF_MEDIA, CONF_BAIXA
@@ -157,6 +158,30 @@ def test_wwr_parse_feed():
     assert j.workplace_type == REMOTE
     assert j.country == "Latin America"
     assert j.url.endswith("acme-senior-backend-engineer")
+
+
+def test_greenhouse_parse():
+    payload = {"jobs": [
+        {"id": 101, "title": "Senior Backend Engineer",
+         "absolute_url": "https://job-boards.greenhouse.io/coinbase/jobs/101",
+         "location": {"name": "Remote - Americas"}, "content": "&lt;p&gt;Go and Python&lt;/p&gt;",
+         "updated_at": "2026-08-01T00:00:00Z"},
+        {"id": 102, "title": "Office Manager",
+         "absolute_url": "https://job-boards.greenhouse.io/coinbase/jobs/102",
+         "location": {"name": "New York, NY"}, "content": "admin"},
+    ], "meta": {"total": 2}}
+    jobs = gh_parse(payload, "coinbase")
+    assert len(jobs) == 2
+    assert jobs[0].provider == "greenhouse"
+    assert jobs[0].workplace_type == REMOTE
+    assert jobs[0].stable_id == "greenhouse:coinbase:101"
+    assert "go and python" in jobs[0].description.lower()   # HTML desescapado e limpo
+    # filtro preciso: engenheiro passa, office manager não
+    prof = SearchProfile(name="i", precise=True, providers=["greenhouse"], workplace_types=["remote"],
+                         locations=["americas", "anywhere", "latin america"])
+    titles = [j.title for j in jobs if matches(j, prof).matched]
+    assert "Senior Backend Engineer" in titles
+    assert "Office Manager" not in titles
 
 
 def test_wwr_international_filter_and_precision():
