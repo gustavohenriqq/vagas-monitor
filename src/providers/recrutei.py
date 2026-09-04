@@ -38,8 +38,14 @@ REQUEST_TIMEOUT = 20
 _HEADERS = {
     "Content-Type": "application/json;charset=UTF-8",
     "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
     "Origin": "https://jobs.recrutei.com.br",
     "Referer": "https://jobs.recrutei.com.br/",
+    # UA de navegador real: com o UA "robô" a API responde 202 sem corpo.
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+    ),
 }
 
 
@@ -124,12 +130,22 @@ class RecruteiProvider(JobProvider):
         for attempt in range(1, 3):
             try:
                 resp = self._session.post(url, json={}, headers=_HEADERS, timeout=REQUEST_TIMEOUT)
-                if resp.status_code == 200:
-                    payload = resp.json()
-                    break
-                logger.warning("Recrutei: HTTP %d para '%s'.", resp.status_code, slug)
-                if resp.status_code < 500:
-                    break
+                # A API pode responder 200 ou 202 com o corpo JSON.
+                if resp.status_code in (200, 202):
+                    try:
+                        data = resp.json()
+                    except ValueError:
+                        data = None
+                    if data and (data.get("data") if isinstance(data, dict) else None):
+                        payload = data
+                        break
+                    # 202 sem corpo útil: costuma ser proteção/UA. Tenta de novo.
+                    logger.warning("Recrutei: HTTP %d sem corpo para '%s' (tentativa %d).",
+                                   resp.status_code, slug, attempt)
+                else:
+                    logger.warning("Recrutei: HTTP %d para '%s'.", resp.status_code, slug)
+                    if resp.status_code < 500:
+                        break
             except Exception as exc:
                 logger.warning("Recrutei: erro em '%s' (tentativa %d): %s", slug, attempt, exc)
             time.sleep(self.delay)
