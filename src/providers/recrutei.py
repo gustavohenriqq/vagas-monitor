@@ -27,13 +27,20 @@ import time
 from typing import Optional
 
 from ..models import ONSITE, REMOTE, WORKPLACE_UNKNOWN, JobPosting
-from .base import JobProvider, fetch_json
+from .base import JobProvider
 
 logger = logging.getLogger(__name__)
 
-# TODO: confirmar a URL exata do endpoint público (DevTools → Request URL).
-# O "{slug}" é o identificador da empresa (ex.: "digisystem").
-RECRUTEI_URL_TEMPLATE = "https://api.recrutei.com.br/api/v1/vacancy/public/{slug}"
+# Endpoint público confirmado (via DevTools): POST com corpo {} e Content-Type
+# application/json. "{slug}" é o identificador da empresa (ex.: "digisystem").
+RECRUTEI_URL_TEMPLATE = "https://api.recrutei.com.br/api/v2/vacancies/per-departments/{slug}"
+REQUEST_TIMEOUT = 20
+_HEADERS = {
+    "Content-Type": "application/json;charset=UTF-8",
+    "Accept": "application/json, text/plain, */*",
+    "Origin": "https://jobs.recrutei.com.br",
+    "Referer": "https://jobs.recrutei.com.br/",
+}
 
 
 def _parse_location(loc) -> tuple[str, str, str]:
@@ -112,7 +119,20 @@ class RecruteiProvider(JobProvider):
         self.url_template = url_template
 
     def _fetch_company(self, slug: str, max_jobs: int) -> list[JobPosting]:
-        payload = fetch_json(self._session, self.url_template.format(slug=slug), delay=self.delay)
+        url = self.url_template.format(slug=slug)
+        payload = None
+        for attempt in range(1, 3):
+            try:
+                resp = self._session.post(url, json={}, headers=_HEADERS, timeout=REQUEST_TIMEOUT)
+                if resp.status_code == 200:
+                    payload = resp.json()
+                    break
+                logger.warning("Recrutei: HTTP %d para '%s'.", resp.status_code, slug)
+                if resp.status_code < 500:
+                    break
+            except Exception as exc:
+                logger.warning("Recrutei: erro em '%s' (tentativa %d): %s", slug, attempt, exc)
+            time.sleep(self.delay)
         if not payload:
             logger.warning("Recrutei: sem dados para '%s'.", slug)
             return []
