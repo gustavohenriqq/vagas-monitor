@@ -10,10 +10,11 @@ Inclui um **painel web local** para configurar as buscas sem editar arquivo.
 
 ## O que faz
 
-- **3 fontes públicas (sem login, sem violar ToS):**
+- **4 fontes públicas (sem login, sem violar ToS):**
   - **Gupy** — busca global por palavra-chave (`employability-portal.gupy.io`), todas as empresas.
   - **inhire** — vagas das empresas (tenants) configuradas (`api.inhire.app`, por `X-Tenant`).
   - **We Work Remotely** — feeds RSS públicos, vagas 100% remotas (internacional).
+  - **Greenhouse** — API oficial pública (`boards-api.greenhouse.io`), por board de empresa.
 - **Dois perfis:**
   - **Brasil** — remoto em qualquer lugar **ou** híbrido em BH e região metropolitana.
   - **Internacional** — remoto em regiões que aceitam Brasil/LatAm (Anywhere, Latin America).
