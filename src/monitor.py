@@ -20,7 +20,10 @@ from zoneinfo import ZoneInfo
 from .config import Config, load_config
 from .matcher import matches
 from .models import JobPosting
-from .providers import GupyProvider, InhireProvider, WwrProvider, GreenhouseProvider, build_session
+from .providers import (
+    GupyProvider, InhireProvider, WwrProvider, GreenhouseProvider,
+    RecruteiProvider, build_session,
+)
 from .relevance import evaluate
 from .searches import SearchProfile, SearchesFile, load_searches
 from .storage import JobRecord, load_history, mark_sent, save_history
@@ -49,9 +52,11 @@ def collect_for_search(
     inhire: InhireProvider,
     wwr: WwrProvider,
     greenhouse: GreenhouseProvider,
+    recrutei: RecruteiProvider,
     max_jobs: int,
     inhire_companies: list[str],
     greenhouse_companies: list[str] | None = None,
+    recrutei_companies: list[str] | None = None,
 ) -> list[JobPosting]:
     """Consulta os providers do perfil e devolve as vagas que casam com o filtro."""
     raw: list[JobPosting] = []
@@ -76,6 +81,12 @@ def collect_for_search(
                                          tokens=greenhouse_companies))
         except Exception as exc:
             logger.warning("Falha no provider Greenhouse para '%s': %s", profile.name, exc)
+    if "recrutei" in profile.providers:
+        try:
+            raw.extend(recrutei.search(profile.keywords, max_jobs=max_jobs,
+                                       companies=recrutei_companies))
+        except Exception as exc:
+            logger.warning("Falha no provider Recrutei para '%s': %s", profile.name, exc)
 
     matched = [job for job in raw if matches(job, profile).matched]
     logger.info("Busca '%s': %d coletadas, %d após filtro.", profile.name, len(raw), len(matched))
@@ -99,6 +110,8 @@ def run(config: Optional[Config] = None, searches: Optional[SearchesFile] = None
     wwr = WwrProvider(session=session, delay=config.request_delay_seconds)
     greenhouse = GreenhouseProvider(tokens=searches.greenhouse_companies, session=session,
                                     delay=config.request_delay_seconds)
+    recrutei = RecruteiProvider(companies=searches.recrutei_companies, session=session,
+                                delay=config.request_delay_seconds)
     notifier = build_notifier(config.telegram_bot_token, config.telegram_chat_id)
 
     new_count = 0
@@ -114,9 +127,11 @@ def run(config: Optional[Config] = None, searches: Optional[SearchesFile] = None
         for profile in enabled:
             jobs = collect_for_search(
                 profile, gupy=gupy, inhire=inhire, wwr=wwr, greenhouse=greenhouse,
+                recrutei=recrutei,
                 max_jobs=config.max_jobs_per_search,
                 inhire_companies=searches.inhire_companies,
                 greenhouse_companies=searches.greenhouse_companies,
+                recrutei_companies=searches.recrutei_companies,
             )
             for job in jobs:
                 sid = job.stable_id
@@ -186,4 +201,5 @@ def run(config: Optional[Config] = None, searches: Optional[SearchesFile] = None
         inhire.close()
         wwr.close()
         greenhouse.close()
+        recrutei.close()
         notifier.close()
