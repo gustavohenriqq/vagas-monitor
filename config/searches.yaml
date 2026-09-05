@@ -87,6 +87,13 @@ greenhouse_companies:
   - rdstation       # RD Station (TOTVS)
   - bancopan        # Banco PAN
   - arcoeducacao    # Arco Educação
+  - nubank          # Nubank
+  - wildlifestudios # Wildlife Studios
+  - quintoandar     # Grupo QuintoAndar
+  - ebanx           # EBANX
+  - vtex            # VTEX
+  - thoughtworks    # Thoughtworks
+  - zenvia          # Zenvia
 
 # Empresas do Recrutei. O slug é o trecho do link público:
 #   https://jobs.recrutei.com.br/digisystem  ->  slug = "digisystem"
