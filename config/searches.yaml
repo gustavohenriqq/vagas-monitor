@@ -68,6 +68,7 @@ inhire_companies:
 # São majoritariamente internacionais/remote-friendly (bom pro perfil PT/ES).
 # Adicione as empresas que te interessam. Tokens inválidos são só ignorados.
 greenhouse_companies:
+  - ifoodcarreiras     # iFood (Brasil) — confirmado
   - coinbase
   - gitlab
   - dropbox
@@ -76,6 +77,16 @@ greenhouse_companies:
   - robinhood
   - brex
   - discord
+  # --- empresas BR confirmadas na API do Greenhouse ---
+  - stone           # Stone
+  - bees            # BEES (Ambev)
+  - agibank         # Agibank
+  - btgpactual      # BTG Pactual
+  - c6bank          # C6 Bank
+  - xpinc           # XP Inc.
+  - rdstation       # RD Station (TOTVS)
+  - bancopan        # Banco PAN
+  - arcoeducacao    # Arco Educação
 
 # Empresas do Recrutei. O slug é o trecho do link público:
 #   https://jobs.recrutei.com.br/digisystem  ->  slug = "digisystem"
@@ -93,7 +104,7 @@ searches:
     enabled: true
     profile: brasil
     precise: true                # usa filtro de 3 níveis (cargo no título)
-    providers: [gupy, inhire, recrutei]
+    providers: [gupy, inhire, recrutei, greenhouse]
     keywords: &tech
       - "desenvolvedor"
       - "desenvolvimento"
@@ -151,7 +162,7 @@ searches:
     enabled: true
     profile: brasil
     precise: true
-    providers: [gupy, inhire, recrutei]
+    providers: [gupy, inhire, recrutei, greenhouse]
     keywords: *tech
     exclude_keywords: []
     seniority: []
