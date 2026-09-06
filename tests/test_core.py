@@ -487,3 +487,56 @@ def test_regiao_classifica_pelo_local():
     from src.models import normalize
     assert not _RE_EUA.search(normalize("Belarus"))
     assert not _RE_EUA.search(normalize("Business Analyst"))
+
+
+def test_vocabulario_cobre_espanhol_e_abreviacoes():
+    """Lacunas reais achadas no histórico: espanhol, 'dev', formas nominais."""
+    aprovados = [
+        "Ingeniero de Datos",
+        "Desarrollador Java - Microservicios",
+        "Ingeniero de Software Senior",
+        "Dev Back Java Pleno",
+        ".NET DEV - PLENO",
+        "Analytics Engineer Sênior",
+        "Tech Leader Mobile",
+        "Mobile Engineer - IOS",
+        "CAS | Engenharia de Software SR",
+        "Profissional de Ciência de Dados Sênior",
+        "Profissional de Desenvolvimento de Software Pleno",
+        "CIENTISTA DADOS SR",
+        "SR Data Architect",
+        "BUSINESS INTELLIGENCE SENIOR",
+        "Profissional Testador de Software Pleno",
+        "ADMINISTRADOR BANCO DADOS SR",
+    ]
+    for titulo in aprovados:
+        assert classify_title(titulo).passes, f"deveria passar: {titulo}"
+
+
+def test_vocabulario_nao_abre_a_porta_para_nao_tech():
+    """O risco de ampliar vocabulário é justamente este — trava aqui."""
+    rejeitados = [
+        "Médica Ginecologista e Obstetra",
+        "Vendedor LATAM Remoto",
+        "SDR LATAM Remoto",
+        "Supervisor de Desenvolvimento de Mercado Sênior",
+        "Analista de Growth e Performance Sênior",
+        "Profissional Desenvolvimento de Negócios",
+        "Auxiliar de Limpeza",
+        "Enfermeiro Plantonista",
+        "Assistente Administrativo",
+        "Analista de Recursos Humanos Pleno",
+        "Gerente Comercial",
+        "Consultor de Vendas",
+        "Analista Financeiro Sênior",
+        "Professor de Matemática",
+    ]
+    for titulo in rejeitados:
+        assert not classify_title(titulo).passes, f"não deveria passar: {titulo}"
+
+
+def test_dev_nao_casa_dentro_de_development():
+    """'dev' entrou como cargo; a fronteira de palavra é o que o torna seguro."""
+    assert classify_title("Dev .NET SR").passes
+    assert not classify_title("Business Development Representative").passes
+    assert not classify_title("Development Manager - Comercial").passes
