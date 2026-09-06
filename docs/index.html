@@ -176,6 +176,18 @@
   .chip{font:500 10px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;
     border:1px solid var(--line);border-radius:5px;padding:4px 6px;color:var(--ink-3)}
   .chip.nd{border-style:dashed;opacity:.75}
+  /* Marcação "já apliquei": vive só no navegador de quem está vendo. */
+  .job.ap{border-color:var(--emerald);background:var(--emerald-dim)}
+  .job.ap .jtitle a{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
+  .btn-ap{cursor:pointer;white-space:nowrap;font:500 11px/1 var(--mono);letter-spacing:.05em;
+    text-transform:uppercase;color:var(--ink-4);background:transparent;border:1px solid var(--line);
+    border-radius:99px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px;
+    transition:border-color .16s,color .16s,background .16s}
+  .btn-ap:hover{border-color:var(--emerald);color:var(--ink-2)}
+  .btn-ap[aria-pressed="true"]{border-color:var(--emerald);background:var(--emerald);color:var(--ground)}
+  :root[data-theme="light"] .btn-ap[aria-pressed="true"]{color:#fff}
+  .btn-ap svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:3;
+    stroke-linecap:round;stroke-linejoin:round}
   .jside{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;flex:none}
   .st{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font:500 11px/1 var(--mono);
     letter-spacing:.05em;text-transform:uppercase}
@@ -248,6 +260,13 @@
     <div class="frow">
       <div class="flabel"><span>Situação no Telegram</span><em>escolha uma</em></div>
       <div class="chips" id="g-st" role="group" aria-label="Situação no Telegram"></div>
+    </div>
+    <div class="frow">
+      <div class="flabel">
+        <span>Candidatura</span>
+        <em>as marcações ficam só neste navegador — ninguém mais vê nem altera</em>
+      </div>
+      <div class="chips" id="g-ap" role="group" aria-label="Candidatura"></div>
     </div>
     <div class="frow">
       <div class="flabel">
@@ -327,9 +346,24 @@
 
   let dados = null, filtradas = [], pagina = 1;
   const estado = {
-    st: "notificadas", q: "", s: 0, o: "d", pp: 50,
+    st: "notificadas", q: "", s: 0, o: "d", pp: 50, ap: "",
     sn: new Set(), w: new Set(), p: new Set(), pf: new Set(),
   };
+
+  /* "Já apliquei": guardado no localStorage, indexado pela URL da vaga.
+     Fica no navegador de quem está vendo — outra pessoa que abra o painel
+     marca no aparelho dela e isso nunca chega aqui. O custo é não
+     sincronizar entre celular e computador. */
+  const CHAVE_AP = "radar-aplicadas";
+  let aplicadas = new Set();
+  try {
+    const bruto = localStorage.getItem(CHAVE_AP);
+    if (bruto) aplicadas = new Set(JSON.parse(bruto));
+  } catch (e) { /* json inválido ou navegação privada: começa vazio */ }
+  function salvarAplicadas() {
+    try { localStorage.setItem(CHAVE_AP, JSON.stringify([...aplicadas])); }
+    catch (e) { /* sem espaço ou navegação privada: vale só nesta sessão */ }
+  }
 
   const LUA = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
   const SOL = '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
@@ -419,22 +453,28 @@
     return isNaN(d.getTime()) ? "" : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
   };
 
+  const CHECK = '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>';
+
   function cartao(v) {
     const st = v.st || "pending";
+    const ap = aplicadas.has(v.u);
     const semNivel = SEM_NIVEL.indexOf(v.sn || "") !== -1;
     const chips = [
       '<span class="chip">' + esc(ROT_W[v.w] || v.w) + '</span>',
       semNivel ? '<span class="chip nd">sem senioridade</span>' : '<span class="chip">' + esc(ROT_SN[v.sn] || v.sn) + '</span>',
       v.c ? '<span class="chip">' + esc(v.c) + '</span>' : "",
     ].join("");
-    return '<li class="job">'
+    return '<li class="job' + (ap ? " ap" : "") + '">'
       + '<div class="sc ' + classeScore(v.s) + '"><b>' + v.s + '</b><i>' + rotuloScore(v.s) + '</i></div>'
       + '<div class="jmain"><p class="jtitle"><a href="' + esc(v.u) + '" target="_blank" rel="noopener noreferrer">'
       + esc(v.t) + '</a></p><div class="jmeta"><span class="co">' + esc(v.e) + '</span>'
       + (v.l ? '<span>' + esc(v.l) + '</span>' : "")
       + '<span class="chip">' + esc(v.p) + '</span>' + chips + '</div></div>'
       + '<div class="jside"><span class="st st-' + esc(st) + '"><span class="d"></span>'
-      + esc(ROT_ST[st] || st) + '</span><span class="when">' + esc(fmtData(v.d)) + '</span></div></li>';
+      + esc(ROT_ST[st] || st) + '</span>'
+      + '<button type="button" class="btn-ap" data-ap="' + esc(v.u) + '" aria-pressed="' + ap + '">'
+      + (ap ? CHECK + "apliquei" : "marcar") + '</button>'
+      + '<span class="when">' + esc(fmtData(v.d)) + '</span></div></li>';
   }
 
   /* Só a página corrente vai para o DOM. Com milhares de vagas é a diferença
@@ -478,6 +518,8 @@
       // Sem senioridade declarada passa em qualquer seleção de nível.
       if (e.sn.size && !e.sn.has(v.sn) && SEM_NIVEL.indexOf(v.sn || "") === -1) return false;
       if (v.s < e.s) return false;
+      if (e.ap === "sim" && !aplicadas.has(v.u)) return false;
+      if (e.ap === "nao" && aplicadas.has(v.u)) return false;
       if (e.q && v._b.indexOf(e.q) === -1) return false;
       return true;
     });
@@ -524,6 +566,7 @@
 
     $("#tiles").innerHTML = [
       ["No histórico", nf.format(dados.total), "vagas", ""],
+      ["Já apliquei", '<span id="tile-ap">' + nf.format(aplicadas.size) + "</span>", "só neste navegador", "t-em"],
       ["Notificadas", nf.format(dados.notificadas), "", "t-em"],
       ["Score ≥ 7", nf.format(alto), "alerta na hora", "t-em"],
       ["No digest", nf.format(ag.status.digest || 0), "às 20h", "t-cy"],
@@ -543,6 +586,43 @@
       estado.st = b.dataset.st;
       $("#g-st").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
       aplicar();
+    });
+
+    const CANDIDATURA = [["", "Todas"], ["nao", "Não aplicadas"], ["sim", "Já apliquei"]];
+    function pintarCandidatura() {
+      const n = { "": dados.total, sim: aplicadas.size, nao: dados.total - aplicadas.size };
+      $("#g-ap").innerHTML = CANDIDATURA.map((c) =>
+        '<button type="button" data-apf="' + c[0] + '" aria-pressed="' + (c[0] === estado.ap) + '">'
+        + c[1] + '<span class="n">' + nf.format(n[c[0]]) + "</span></button>").join("");
+      const t = $("#tile-ap");
+      if (t) t.textContent = nf.format(aplicadas.size);
+    }
+    pintarCandidatura();
+    $("#g-ap").addEventListener("click", (ev) => {
+      const b = ev.target.closest("button[data-apf]"); if (!b) return;
+      estado.ap = b.dataset.apf;
+      pintarCandidatura();
+      aplicar();
+    });
+
+    // Alternar a marcação atualiza a linha no lugar, sem redesenhar a página
+    // inteira — a não ser que o filtro de candidatura esteja ativo, aí a vaga
+    // precisa entrar ou sair da lista.
+    $("#feed").addEventListener("click", (ev) => {
+      const b = ev.target.closest("button[data-ap]"); if (!b) return;
+      const url = b.dataset.ap, linha = b.closest(".job");
+      if (aplicadas.has(url)) {
+        aplicadas.delete(url);
+        b.setAttribute("aria-pressed", "false"); b.innerHTML = "marcar";
+        if (linha) linha.classList.remove("ap");
+      } else {
+        aplicadas.add(url);
+        b.setAttribute("aria-pressed", "true"); b.innerHTML = CHECK + "apliquei";
+        if (linha) linha.classList.add("ap");
+      }
+      salvarAplicadas();
+      pintarCandidatura();
+      if (estado.ap) aplicar();
     });
 
     grupoMulti($("#g-sn"), contar("sn"), ROT_SN, estado.sn);
@@ -572,8 +652,11 @@
       $(".resbar").scrollIntoView({ behavior: "smooth", block: "start" });
     });
     $("#reset").addEventListener("click", () => {
-      estado.st = "notificadas"; estado.q = ""; estado.s = 0; estado.o = "d";
+      // Limpa só os filtros. As marcações de "já apliquei" continuam:
+      // apagá-las aqui seria perder dado que você digitou, não um filtro.
+      estado.st = "notificadas"; estado.q = ""; estado.s = 0; estado.o = "d"; estado.ap = "";
       [estado.sn, estado.w, estado.p, estado.pf].forEach((c) => c.clear());
+      pintarCandidatura();
       $("#q").value = ""; $("#f-o").value = "d"; $("#f-s").value = "0"; $("#f-s-out").value = "0";
       document.querySelectorAll(".chips button[data-v]").forEach((x) => x.setAttribute("aria-pressed", "false"));
       $("#g-st").querySelectorAll("button").forEach((x) =>
