@@ -95,11 +95,8 @@ greenhouse_companies:
   - thoughtworks    # Thoughtworks
   - zenvia          # Zenvia
 
-# Empresas do Recrutei. O slug é o trecho do link público:
-#   https://jobs.recrutei.com.br/digisystem  ->  slug = "digisystem"
-# (Só entra em ação quando a URL do endpoint público for confirmada no código.)
-recrutei_companies:
-  - digisystem
+# Recrutei roda em modo GLOBAL (agregador empregos.recrutei.com.br): cobre TODAS
+# as empresas automaticamente, sem precisar listar slug por slug.
 
 # Cada item é um perfil de busca independente. Uma vaga é notificada se casar
 # com QUALQUER palavra de `keywords` e passar pelos demais filtros.
@@ -169,7 +166,9 @@ searches:
     enabled: true
     profile: brasil
     precise: true
-    providers: [gupy, inhire, recrutei, greenhouse]
+    # Recrutei fica de fora do híbrido: no modo global ele não traz a cidade,
+    # então não dá pra filtrar por BH. Ele entra na busca de remoto.
+    providers: [gupy, inhire, greenhouse]
     keywords: *tech
     exclude_keywords: []
     seniority: []

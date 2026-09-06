@@ -267,7 +267,7 @@ def preview(idx: int):
     inhire = InhireProvider(tenants=data.inhire_companies, session=session, delay=CONFIG.request_delay_seconds)
     wwr = WwrProvider(session=session, delay=CONFIG.request_delay_seconds)
     greenhouse = GreenhouseProvider(tokens=data.greenhouse_companies, session=session, delay=CONFIG.request_delay_seconds)
-    recrutei = RecruteiProvider(companies=data.recrutei_companies, session=session, delay=CONFIG.request_delay_seconds)
+    recrutei = RecruteiProvider(session=session, delay=CONFIG.request_delay_seconds)
     try:
         jobs = collect_for_search(profile, gupy=gupy, inhire=inhire, wwr=wwr, greenhouse=greenhouse,
                                   recrutei=recrutei,

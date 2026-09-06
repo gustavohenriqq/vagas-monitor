@@ -83,8 +83,9 @@ def collect_for_search(
             logger.warning("Falha no provider Greenhouse para '%s': %s", profile.name, exc)
     if "recrutei" in profile.providers:
         try:
-            raw.extend(recrutei.search(profile.keywords, max_jobs=max_jobs,
-                                       companies=recrutei_companies))
+            wt_map = {"remote": "remote", "hybrid": "hibrido", "onsite": "presencial"}
+            models = [wt_map[w] for w in profile.workplace_types if w in wt_map] or ["remote"]
+            raw.extend(recrutei.search(profile.keywords, max_jobs=max_jobs, models=models))
         except Exception as exc:
             logger.warning("Falha no provider Recrutei para '%s': %s", profile.name, exc)
 
@@ -110,8 +111,7 @@ def run(config: Optional[Config] = None, searches: Optional[SearchesFile] = None
     wwr = WwrProvider(session=session, delay=config.request_delay_seconds)
     greenhouse = GreenhouseProvider(tokens=searches.greenhouse_companies, session=session,
                                     delay=config.request_delay_seconds)
-    recrutei = RecruteiProvider(companies=searches.recrutei_companies, session=session,
-                                delay=config.request_delay_seconds)
+    recrutei = RecruteiProvider(session=session, delay=config.request_delay_seconds)
     notifier = build_notifier(config.telegram_bot_token, config.telegram_chat_id)
 
     new_count = 0

@@ -9,7 +9,7 @@ from src.providers.gupy import parse_jobs as gupy_parse
 from src.providers.inhire import parse_jobs as inhire_parse, _find_job_list
 from src.providers.wwr import parse_feed as wwr_parse
 from src.providers.greenhouse import parse_jobs as gh_parse
-from src.providers.recrutei import parse_jobs as rec_parse
+from src.providers.recrutei import parse_search_html as rec_parse
 from src.matcher import matches
 from src.models import infer_seniority, JobPosting, REMOTE, HYBRID
 from src.relevance import classify_title, evaluate, CONF_ALTA, CONF_MEDIA, CONF_BAIXA
@@ -185,29 +185,30 @@ def test_greenhouse_parse():
     assert "Office Manager" not in titles
 
 
-def test_recrutei_parse_grouped():
-    payload = {"data": {"total": 3, "vacancies": [
-        {"department": "Governo", "items": [
-            {"id": 1, "title": "Desenvolvedor Backend Java Senior", "company_name": "Digisystem",
-             "location": ["Brasil"], "public_link": "https://jobs.recrutei.com.br/digisystem/vacancy/1-x"},
-            {"id": 2, "title": "Recepção", "company_name": "Digisystem",
-             "location": ["São Paulo", "SP", "Brasil"], "public_link": "https://jobs.recrutei.com.br/digisystem/vacancy/2-y"},
-        ]},
-        {"department": "Corporativo", "items": [
-            {"id": 3, "title": "Analista de Dados", "company_name": "Digisystem",
-             "location": ["Belo Horizonte", "MG", "Brasil"], "public_link": "https://jobs.recrutei.com.br/digisystem/vacancy/3-z"},
-        ]},
-    ]}}
-    jobs = rec_parse(payload, "digisystem")
-    assert len(jobs) == 3                       # achata os dois departamentos
-    by_title = {j.title: j for j in jobs}
-    assert by_title["Desenvolvedor Backend Java Senior"].workplace_type == REMOTE   # só "Brasil"
-    assert by_title["Recepção"].city == "São Paulo"
-    assert by_title["Analista de Dados"].state == "MG"
-    # filtro remoto + tech: só o dev remoto entra
+RECRUTEI_HTML = """
+<div class="jobs">
+  <a href="https://empregos.recrutei.com.br/vaga/digisystem/156191-desenvolvedor-backend-java-senior?has_bot=1">Dev</a>
+  <a href="/vaga/thera-consulting/157032-consultor-sap-apo-senior">SAP</a>
+  <a href="/vaga/rehva-tech/156945-desenvolvedora-php-laravel">PHP</a>
+  <a href="/vaga/rehva-tech/156945-desenvolvedora-php-laravel">PHP dup</a>
+</div>
+"""
+
+
+def test_recrutei_global_parse():
+    jobs = rec_parse(RECRUTEI_HTML, "remote")
+    assert len(jobs) == 3                        # deduplica o link repetido
+    by_id = {j.external_id: j for j in jobs}
+    dev = by_id["digisystem:156191"]
+    assert dev.provider == "recrutei"
+    assert dev.workplace_type == REMOTE          # veio de model=remote
+    assert dev.company == "Digisystem"
+    assert dev.title == "Desenvolvedor Backend Java Senior"
+    assert dev.url.endswith("156191-desenvolvedor-backend-java-senior")
+    # 3 níveis + remoto: dev/consultor tech passam
     prof = SearchProfile(name="r", precise=True, providers=["recrutei"], workplace_types=["remote"])
     titles = [j.title for j in jobs if matches(j, prof).matched]
-    assert titles == ["Desenvolvedor Backend Java Senior"]
+    assert "Desenvolvedor Backend Java Senior" in titles
 
 
 def test_wwr_international_filter_and_precision():
