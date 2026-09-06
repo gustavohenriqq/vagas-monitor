@@ -291,3 +291,76 @@ def test_wwr_international_filter_and_precision():
     titles = [j.title for j in jobs if matches(j, prof).matched]
     assert "Senior Backend Engineer" in titles   # tech + Latin America
     assert "Growth Marketer" not in titles        # não-tech (e USA Only)
+
+
+def _smartr_fake_fetch(total: int, chamadas: list):
+    """fetch_json falso: devolve páginas de 100 até somar `total` vagas."""
+    def fake(session, url, *, params=None, headers=None, delay=1.0):
+        offset = params["offset"]
+        chamadas.append(offset)
+        restante = max(0, total - offset)
+        size = min(100, restante)
+        return {
+            "offset": offset, "limit": 100, "totalFound": total,
+            "content": [
+                {"id": str(offset + i), "name": f"Backend Developer {offset + i}",
+                 "location": {"city": "", "region": "", "country": "br", "remote": True}}
+                for i in range(size)
+            ],
+        }
+    return fake
+
+
+def test_smartrecruiters_paginates_until_total(monkeypatch):
+    """Board com 250 vagas exige 3 páginas — antes só a primeira era vista."""
+    from src.providers import smartrecruiters as sr
+
+    chamadas: list = []
+    monkeypatch.setattr(sr, "fetch_json", _smartr_fake_fetch(250, chamadas))
+
+    jobs = sr.SmartRecruitersProvider(companies=["acme"], delay=0).search([], max_jobs=1000)
+
+    assert chamadas == [0, 100, 200]
+    assert len(jobs) == 250
+    assert jobs[0].url == "https://jobs.smartrecruiters.com/acme/0"
+
+
+def test_smartrecruiters_respeita_max_jobs_por_empresa(monkeypatch):
+    """Para de paginar ao atingir max_jobs, sem varrer o board inteiro."""
+    from src.providers import smartrecruiters as sr
+
+    chamadas: list = []
+    monkeypatch.setattr(sr, "fetch_json", _smartr_fake_fetch(5000, chamadas))
+
+    jobs = sr.SmartRecruitersProvider(companies=["acme"], delay=0).search([], max_jobs=150)
+
+    assert chamadas == [0, 100]
+    assert len(jobs) == 150
+
+
+def test_ashby_teto_por_org(monkeypatch):
+    """Org com board gigante não pode zerar a cota das orgs seguintes."""
+    from src.providers import ashby as ab
+
+    boards = {
+        "gigante": {"jobs": [
+            {"id": f"g{i}", "title": "Backend Engineer", "jobUrl": f"https://jobs.ashbyhq.com/gigante/g{i}",
+             "location": "Remote", "isRemote": True}
+            for i in range(500)
+        ]},
+        "pequena": {"jobs": [
+            {"id": "p1", "title": "Data Engineer", "jobUrl": "https://jobs.ashbyhq.com/pequena/p1",
+             "location": "Remote", "isRemote": True},
+        ]},
+    }
+
+    def fake(session, url, *, params=None, headers=None, delay=1.0):
+        return boards[url.rstrip("/").rsplit("/", 1)[-1]]
+
+    monkeypatch.setattr(ab, "fetch_json", fake)
+
+    jobs = ab.AshbyProvider(companies=["gigante", "pequena"], delay=0).search([], max_jobs=10)
+    empresas = {j.company for j in jobs}
+
+    assert empresas == {"gigante", "pequena"}      # antes: só "gigante"
+    assert sum(1 for j in jobs if j.company == "gigante") == 10

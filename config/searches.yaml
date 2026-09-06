@@ -94,6 +94,12 @@ greenhouse_companies:
   - vtex            # VTEX
   - thoughtworks    # Thoughtworks
   - zenvia          # Zenvia
+  # --- achadas cruzando os ATSs: falham no Lever, mas existem aqui ---
+  - sumup           # SumUp (409)
+  - gympass         # Gympass/Wellhub (85)
+  - wizeline        # Wizeline (31)
+  - jusbrasil       # Jusbrasil (17)
+  - incognia        # Incognia (8)
 
 # Recrutei roda em modo GLOBAL (agregador empregos.recrutei.com.br): cobre TODAS
 # as empresas automaticamente, sem precisar listar slug por slug.
@@ -104,10 +110,98 @@ greenhouse_companies:
 #   Ashby:           https://jobs.ashbyhq.com/<token>
 #   Recruitee:       https://<token>.recruitee.com
 #   SmartRecruiters: https://jobs.smartrecruiters.com/<token>
-lever_companies: []
-ashby_companies: []
-recruitee_companies: []
-smartrecruiters_companies: []
+# Todos os tokens abaixo foram verificados na API pública em 06/09/2026; o número
+# no comentário é a quantidade de vagas no board naquele dia. Token inválido é só
+# ignorado (404 logado), mas manter a lista limpa economiza requisição por execução.
+lever_companies:
+  # --- Brasil / LatAm ---
+  - ciandt                # CI&T (194) — muita vaga remoto/Brasil
+  - bluelightconsulting   # Bluelight (513) — remoto LatAm
+  - dlocal                # dLocal (53) — remoto Brasil
+  - flashapp              # Flash Benefícios (36)
+  - bv                    # Banco BV (25)
+  - swile                 # Swile Brasil (25) — SP + remoto Brasil
+  - jumpcloud             # JumpCloud (18) — tem vagas remoto em Belo Horizonte
+  - mashgin               # Mashgin (15) — remoto Brasil
+  - oowlish               # Oowlish (13) — remoto Brasil/LatAm
+  - neon                  # Neon, banco brasileiro (12)
+  - veritran              # Veritran (11) — SP / Buenos Aires / Bogotá
+  - kavak                 # Kavak (9) — México
+  - starkbank             # Stark Bank (8) — SP
+  - fanatee               # Fanatee (8) — games, BR
+  - lahaus                # La Haus (2) — LatAm
+  # --- Internacional (remoto) ---
+  - palantir              # (310)
+  - binance               # (284) — contrata em LatAm
+  - spotify               # (78)
+  - matchgroup            # (75)
+  - linkedin              # (23)
+  - toptal                # (18)
+  - ledger                # (1)
+  # Tokens válidos mas com board vazio hoje — descomente se voltarem a publicar:
+  # - cloudwalk
+  # - tractian
+  # - freshworks
+  # - kraken
+  # jobgether é agregador: 4.028 vagas (316 com "Brazil") num único JSON de 39 MB,
+  # ~20s de download por execução. Ligue só se aceitar esse custo no Actions:
+  # - jobgether
+
+ashby_companies:
+  # --- Brasil ---
+  - warren               # Warren (14) — BR
+  - malga                # Malga (1) — BR
+  # --- Internacional remote-friendly (IA, dev tools, SaaS) ---
+  - openai               # (779)
+  - snowflake            # (376)
+  - harvey               # (346)
+  - elevenlabs           # (252)
+  - sierra               # (210)
+  - deliveroo            # (209)
+  - cohere               # (143)
+  - ramp                 # (142)
+  - decagon              # (139)
+  - notion               # (133)
+  - cursor               # (124) — Anysphere
+  - xero                 # (113)
+  - perplexity           # (112)
+  - vanta                # (111)
+  - mercor               # (96)
+  - lovable              # (81)
+  - replit               # (71)
+  - temporal             # (66)
+  - supabase             # (60)
+  - n8n                  # (41)
+  - sentry               # (41)
+  - miro                 # (38)
+  - render               # (35)
+  - hex                  # (30)
+  - linear               # (29)
+  - workos               # (28)
+  - oyster               # (25)
+  - resend               # (11)
+  - browserbase          # (9)
+  - moderntreasury       # (9)
+  - posthog              # (9)
+  - railway              # (8)
+  - zapier               # (7)
+  - neon                 # (6) — Neon serverless Postgres (≠ do "neon" do Lever)
+  - clerk                # (1)
+  # Válidos mas vazios hoje: reddit, deel, mercury, loom, vercel
+
+recruitee_companies:
+  - cpqd                 # CPQD (11) — Campinas, P&D em telecom
+  - asksuite             # Asksuite (7) — IA para hotelaria, BR
+  - mindmultiplan        # MIND / Multiplan (1) — BR
+  # bunq (13) e trustedshops (19) são válidos, mas só vagas presenciais na Europa.
+
+smartrecruiters_companies:
+  - BoschGroup           # Bosch (4.812 no mundo, ~80 no Brasil) — o token é case-sensitive
+  - DeliveryHero         # Delivery Hero (100+)
+  # Válidos porém sem vagas expostas nessa API (totalFound=0): Visa, LinkedIn,
+  # Amazon, McDonalds, Alstom, Lidl, Skechers.
+  # Válidos mas fora do escopo tech: angloamericandebeersgroup, AveryDennison,
+  # JYSK, Equinox.
 
 # Cada item é um perfil de busca independente. Uma vaga é notificada se casar
 # com QUALQUER palavra de `keywords` e passar pelos demais filtros.
@@ -119,7 +213,7 @@ searches:
     enabled: true
     profile: brasil
     precise: true                # usa filtro de 3 níveis (cargo no título)
-    providers: [gupy, inhire, recrutei, greenhouse]
+    providers: [gupy, inhire, recrutei, greenhouse, lever, ashby, recruitee, smartrecruiters]
     keywords: &tech
       - "desenvolvedor"
       - "desenvolvimento"
@@ -179,7 +273,7 @@ searches:
     precise: true
     # Recrutei fica de fora do híbrido: no modo global ele não traz a cidade,
     # então não dá pra filtrar por BH. Ele entra na busca de remoto.
-    providers: [gupy, inhire, greenhouse]
+    providers: [gupy, inhire, greenhouse, lever]
     keywords: *tech
     exclude_keywords: []
     seniority: []
@@ -216,7 +310,7 @@ searches:
     enabled: true
     profile: internacional
     precise: true
-    providers: [wwr, greenhouse, remotive, remoteok]
+    providers: [wwr, greenhouse, remotive, remoteok, lever, ashby]
     keywords: []                 # o filtro de 3 níveis já garante que é tech
     exclude_keywords: []
     seniority: []
