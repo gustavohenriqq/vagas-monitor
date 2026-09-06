@@ -51,12 +51,19 @@ jobs:
           MAX_JOBS_PER_SEARCH: "1500"
           REQUEST_DELAY_SECONDS: "0.4"
         run: python -m src.main
-      - name: Commitar histórico se mudou
+      # Regenera o JSON enxuto que o painel do GitHub Pages consome. Roda sempre,
+      # mesmo que o monitor não tenha achado nada, para o painel nunca ficar órfão.
+      - name: Gerar dados do painel
+        if: always()
+        run: python -m src.dashboard
+
+      - name: Commitar histórico e painel se mudou
+        if: always()
         run: |
-          if [[ -n "$(git status --porcelain data/jobs.json)" ]]; then
+          if [[ -n "$(git status --porcelain data/jobs.json docs/data.json)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add data/jobs.json
+            git add data/jobs.json docs/data.json
             git commit -m "chore: atualiza histórico de vagas [skip ci]"
             git push
           fi

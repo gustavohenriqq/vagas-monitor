@@ -364,3 +364,35 @@ def test_ashby_teto_por_org(monkeypatch):
 
     assert empresas == {"gigante", "pequena"}      # antes: só "gigante"
     assert sum(1 for j in jobs if j.company == "gigante") == 10
+
+
+def test_dashboard_payload():
+    """Payload do painel: campos curtos, ordem por data e contagem de notificadas."""
+    from src.dashboard import build_payload
+    from src.storage import JobRecord
+
+    def rec(sid, titulo, score, status, quando, provider="lever"):
+        job = JobPosting(provider=provider, external_id=sid, title=titulo, company="Acme",
+                         url=f"https://x/{sid}", city="Belo Horizonte", state="MG",
+                         workplace_type=REMOTE)
+        return JobRecord(stable_id=f"{provider}:{sid}", job=job, first_seen_at=quando,
+                         last_seen_at=quando, notification_status=status, score=score,
+                         confidence="alta", profile="brasil", matched_searches=["Tech"])
+
+    history = {
+        "a": rec("1", "Engenheiro de Dados", 9, "sent", "2026-09-01T10:00:00+00:00"),
+        "b": rec("2", "Analista de BI", 6, "digest", "2026-09-03T10:00:00+00:00"),
+        "c": rec("3", "Suporte", 0, "skipped", "2026-09-02T10:00:00+00:00", provider="gupy"),
+    }
+    p = build_payload(history)
+
+    assert p["total"] == 3
+    assert p["notificadas"] == 2                      # sent + digest, nunca skipped
+    assert [v["t"] for v in p["vagas"]] == ["Analista de BI", "Suporte", "Engenheiro de Dados"]
+    assert p["agregados"]["provider"] == {"lever": 2, "gupy": 1}
+    assert p["agregados"]["status"] == {"sent": 1, "digest": 1, "skipped": 1}
+    assert p["agregados"]["score"]["9"] == 1
+
+    primeira = p["vagas"][0]
+    assert primeira["l"] == "Belo Horizonte, MG"      # local montado sem campos vazios
+    assert primeira["u"] == "https://x/2" and primeira["st"] == "digest"
