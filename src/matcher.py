@@ -6,7 +6,8 @@ Regras (todas precisam passar):
   2. exclude_keywords: se QUALQUER uma aparecer, a vaga é descartada.
   3. seniority: se houver lista, a senioridade da vaga precisa estar nela.
   4. workplace_types: se houver lista, o tipo de local precisa estar nela.
-  5. locations: se houver lista, ao menos um termo precisa casar cidade/estado/rótulo.
+  5. exclude_locations: se algum termo casar o local, a vaga é descartada.
+  6. locations: se houver lista, ao menos um termo precisa casar cidade/estado/rótulo.
 
 Comparações são feitas sem acento e em minúsculas (via models.normalize).
 """
@@ -88,9 +89,17 @@ def matches(job: JobPosting, profile: SearchProfile) -> MatchResult:
         return MatchResult(False, f"local '{job.workplace_type}' fora do filtro")
 
     # 5. Localização textual
-    if profile.locations:
+    if profile.exclude_locations or profile.locations:
         location_blob = normalize(f"{job.city} {job.state} {job.country} {job.location_label}")
-        if not _any_in(profile.locations, location_blob):
+
+        # Exclusão primeiro: barra local claramente fora do alcance do perfil.
+        # Local vazio ou genérico ("Remote") passa de propósito — a vaga pode
+        # muito bem aceitar o Brasil, e descartá-la perderia vaga boa.
+        fora = _any_in(profile.exclude_locations, location_blob) if profile.exclude_locations else []
+        if fora:
+            return MatchResult(False, f"local excluído por: {', '.join(fora)}")
+
+        if profile.locations and not _any_in(profile.locations, location_blob):
             return MatchResult(False, "localização fora do filtro")
 
     return MatchResult(True, "ok", matched_kw)

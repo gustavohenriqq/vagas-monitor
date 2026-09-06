@@ -264,7 +264,63 @@ searches:
     exclude_keywords: []
     seniority: []                # qualquer (inclui estágio)
     workplace_types: [remote]    # só remoto / home office
-    locations: []                # qualquer lugar
+    locations: []                # qualquer lugar, menos o que a lista abaixo barra
+    # Barra vagas presas a outro país. Só entra termo inequívoco: local vazio
+    # ou genérico ("Remote") continua passando de propósito, porque a vaga pode
+    # aceitar o Brasil. Sem isso, as fontes globais (lever/ashby/smartrecruiters)
+    # enchiam o perfil Brasil de vaga de São Francisco e Singapura.
+    exclude_locations: &fora_do_brasil
+      - "united states"
+      - "usa"
+      - "estados unidos"
+      - "san francisco"
+      - "new york"
+      - "california"
+      - "menlo park"
+      - "foster city"
+      - "bellevue"
+      - "seattle"
+      - "austin"
+      - "boston"
+      - "chicago"
+      - "canada"
+      - "toronto"
+      - "united kingdom"
+      - "london"
+      - "england"
+      - "ireland"
+      - "dublin"
+      - "europe"
+      - "emea"
+      - "apac"
+      - "singapore"
+      - "hong kong"
+      - "asia"
+      - "india"
+      - "bangalore"
+      - "taiwan"
+      - "taipei"
+      - "japan"
+      - "tokyo"
+      - "australia"
+      - "sydney"
+      - "melbourne"
+      - "germany"
+      - "berlin"
+      - "munich"
+      - "france"
+      - "paris"
+      - "poland"
+      - "warsaw"
+      - "netherlands"
+      - "amsterdam"
+      - "ho chi minh"
+      - "vietnam"
+      - "philippines"
+      - "israel"
+      - "tel aviv"
+      - "dubai"
+      - "south africa"
 
   # ---- 2) TECH HÍBRIDO — só BH e região metropolitana ----
   - name: "Tech — Híbrido (BH e região)"
@@ -302,6 +358,7 @@ searches:
       - "confins"
       - "jaboticatubas"
       - "baldim"
+    exclude_locations: *fora_do_brasil
 
   # ---- 3) PERFIL INTERNACIONAL — remoto aberto ao Brasil/LatAm (PT/ES) ----
   # Fonte: We Work Remotely (RSS). Só regiões que aceitam candidatos de fora dos

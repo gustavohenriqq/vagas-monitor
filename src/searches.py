@@ -54,6 +54,10 @@ class SearchProfile:
     seniority: list[str] = field(default_factory=list)
     workplace_types: list[str] = field(default_factory=list)
     locations: list[str] = field(default_factory=list)
+    # Barra a vaga pelo LOCAL. `exclude_keywords` não serve para isso: ela é
+    # comparada com o search_blob (título + empresa + descrição), que não
+    # carrega cidade nem país.
+    exclude_locations: list[str] = field(default_factory=list)
     # precise=True: usa o filtro de 3 níveis (cargo no título) em vez de só
     # palavra-chave solta. profile: rótulo do perfil (brasil | internacional).
     precise: bool = False
@@ -71,6 +75,7 @@ class SearchProfile:
             "seniority": self.seniority,
             "workplace_types": self.workplace_types,
             "locations": self.locations,
+            "exclude_locations": self.exclude_locations,
         }
 
     @classmethod
@@ -97,6 +102,7 @@ class SearchProfile:
             seniority=[s.lower() for s in _as_list(data.get("seniority")) if s.lower() in VALID_SENIORITY],
             workplace_types=[w.lower() for w in _as_list(data.get("workplace_types")) if w.lower() in VALID_WORKPLACE],
             locations=_as_list(data.get("locations")),
+            exclude_locations=_as_list(data.get("exclude_locations")),
             precise=bool(data.get("precise", False)),
             profile=str(data.get("profile") or "brasil").strip().lower(),
         )
