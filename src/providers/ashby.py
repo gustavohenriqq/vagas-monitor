@@ -65,10 +65,14 @@ class AshbyProvider(JobProvider):
             if not payload:
                 logger.warning("Ashby: sem dados para '%s'.", org)
                 continue
-            for job in parse_jobs(payload, org):
+            # `max_jobs` é teto POR org (mesma razão do Lever/Greenhouse): a org
+            # com board gigante não pode zerar a cota das demais.
+            jobs = parse_jobs(payload, org)[:max_jobs]
+            for job in jobs:
                 if job.stable_id not in seen:
                     seen.add(job.stable_id)
                     result.append(job)
+            logger.info("Ashby[%s]: %d vagas.", org, len(jobs))
             time.sleep(self.delay)
         logger.info("Ashby: %d vagas em %d orgs.", len(result), len(self.companies))
-        return result[:max_jobs]
+        return result

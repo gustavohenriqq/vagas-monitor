@@ -77,11 +77,14 @@ class LeverProvider(JobProvider):
             if not payload:
                 logger.warning("Lever: sem dados para '%s'.", company)
                 continue
-            for job in parse_jobs(payload, company):
+            # `max_jobs` é teto POR empresa: cortar só no fim faria um board grande
+            # consumir a cota inteira e as empresas seguintes nunca apareceriam.
+            jobs = parse_jobs(payload, company)[:max_jobs]
+            for job in jobs:
                 if job.stable_id not in seen:
                     seen.add(job.stable_id)
                     result.append(job)
-            logger.info("Lever[%s]: coletado.", company)
+            logger.info("Lever[%s]: %d vagas.", company, len(jobs))
             time.sleep(self.delay)
         logger.info("Lever: %d vagas em %d empresas.", len(result), len(self.companies))
-        return result[:max_jobs]
+        return result
