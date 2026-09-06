@@ -24,15 +24,15 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from src.config import load_config
     from src.matcher import matches
-    from src.monitor import run, setup_logging, collect_for_search
-    from src.providers import GupyProvider, InhireProvider, WwrProvider, GreenhouseProvider, RecruteiProvider, build_session
+    from src.monitor import run, setup_logging, collect_for_search, build_provider_map
+    from src.providers import build_session
     from src.searches import SearchProfile, SearchesFile, load_searches, save_searches, VALID_PROVIDERS, VALID_SENIORITY, VALID_WORKPLACE
     from src.storage import load_history
 else:
     from .config import load_config
     from .matcher import matches
-    from .monitor import run, setup_logging, collect_for_search
-    from .providers import GupyProvider, InhireProvider, WwrProvider, GreenhouseProvider, RecruteiProvider, build_session
+    from .monitor import run, setup_logging, collect_for_search, build_provider_map
+    from .providers import build_session
     from .searches import SearchProfile, SearchesFile, load_searches, save_searches, VALID_PROVIDERS, VALID_SENIORITY, VALID_WORKPLACE
     from .storage import load_history
 
@@ -263,20 +263,15 @@ def preview(idx: int):
         return redirect(url_for("index", msg="Busca inexistente."))
     profile = data.searches[idx]
     session = build_session()
-    gupy = GupyProvider(session=session, delay=CONFIG.request_delay_seconds)
-    inhire = InhireProvider(tenants=data.inhire_companies, session=session, delay=CONFIG.request_delay_seconds)
-    wwr = WwrProvider(session=session, delay=CONFIG.request_delay_seconds)
-    greenhouse = GreenhouseProvider(tokens=data.greenhouse_companies, session=session, delay=CONFIG.request_delay_seconds)
-    recrutei = RecruteiProvider(session=session, delay=CONFIG.request_delay_seconds)
+    provider_map = build_provider_map(data, session, CONFIG.request_delay_seconds)
     try:
-        jobs = collect_for_search(profile, gupy=gupy, inhire=inhire, wwr=wwr, greenhouse=greenhouse,
-                                  recrutei=recrutei,
-                                  max_jobs=min(CONFIG.max_jobs_per_search, 60),
-                                  inhire_companies=data.inhire_companies,
-                                  greenhouse_companies=data.greenhouse_companies,
-                                  recrutei_companies=data.recrutei_companies)
+        jobs = collect_for_search(profile, provider_map, min(CONFIG.max_jobs_per_search, 60))
     finally:
-        gupy.close(); inhire.close(); wwr.close(); greenhouse.close(); recrutei.close()
+        for prov in provider_map.values():
+            try:
+                prov.close()
+            except Exception:
+                pass
     return render(PREVIEW_BODY, name=profile.name, jobs=jobs)
 
 

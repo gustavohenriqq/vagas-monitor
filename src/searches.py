@@ -32,7 +32,10 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-VALID_PROVIDERS = ("gupy", "inhire", "wwr", "greenhouse", "recrutei")
+VALID_PROVIDERS = (
+    "gupy", "inhire", "wwr", "greenhouse", "recrutei",
+    "remotive", "remoteok", "lever", "ashby", "recruitee", "smartrecruiters",
+)
 VALID_WORKPLACE = ("remote", "hybrid", "onsite")
 VALID_SENIORITY = ("estagio", "junior", "pleno", "senior", "lead", "indefinido")
 
@@ -99,22 +102,43 @@ class SearchProfile:
         )
 
 
+# Providers baseados em empresa e a chave da lista no YAML.
+COMPANY_LIST_KEYS = {
+    "inhire": "inhire_companies",
+    "greenhouse": "greenhouse_companies",
+    "lever": "lever_companies",
+    "ashby": "ashby_companies",
+    "recruitee": "recruitee_companies",
+    "smartrecruiters": "smartrecruiters_companies",
+}
+
+
 @dataclass
 class SearchesFile:
     """Conteúdo completo do searches.yaml."""
 
-    inhire_companies: list[str] = field(default_factory=list)
-    greenhouse_companies: list[str] = field(default_factory=list)
-    recrutei_companies: list[str] = field(default_factory=list)
+    # Listas de empresas por provider (chave = nome do provider).
+    company_lists: dict = field(default_factory=dict)
     searches: list[SearchProfile] = field(default_factory=list)
 
+    def companies(self, provider: str) -> list[str]:
+        return self.company_lists.get(provider, [])
+
+    # Acessos usados pelo código legado / painel.
+    @property
+    def inhire_companies(self) -> list[str]:
+        return self.companies("inhire")
+
+    @property
+    def greenhouse_companies(self) -> list[str]:
+        return self.companies("greenhouse")
+
     def to_dict(self) -> dict:
-        return {
-            "inhire_companies": self.inhire_companies,
-            "greenhouse_companies": self.greenhouse_companies,
-            "recrutei_companies": self.recrutei_companies,
-            "searches": [s.to_dict() for s in self.searches],
-        }
+        out: dict = {}
+        for prov, key in COMPANY_LIST_KEYS.items():
+            out[key] = self.company_lists.get(prov, [])
+        out["searches"] = [s.to_dict() for s in self.searches]
+        return out
 
 
 def load_searches(path: Path = DEFAULT_SEARCHES_PATH) -> SearchesFile:
@@ -130,22 +154,20 @@ def load_searches(path: Path = DEFAULT_SEARCHES_PATH) -> SearchesFile:
         logger.error("YAML inválido em %s: %s. Retornando vazio.", path, exc)
         return SearchesFile()
 
-    companies_raw = raw.get("inhire_companies") or []
-    companies = [str(c).strip().lower() for c in companies_raw if str(c).strip()]
-
-    gh_raw = raw.get("greenhouse_companies") or []
-    gh = [str(c).strip() for c in gh_raw if str(c).strip()]
-
-    rec_raw = raw.get("recrutei_companies") or []
-    rec = [str(c).strip() for c in rec_raw if str(c).strip()]
+    company_lists: dict = {}
+    for prov, key in COMPANY_LIST_KEYS.items():
+        raw_list = raw.get(key) or []
+        vals = [str(c).strip() for c in raw_list if str(c).strip()]
+        if prov == "inhire":
+            vals = [v.lower() for v in vals]  # tenants do inhire são minúsculos
+        company_lists[prov] = vals
 
     searches_raw = raw.get("searches") or []
     searches = [SearchProfile.from_dict(item) for item in searches_raw if isinstance(item, dict)]
 
-    logger.info("Config carregada: %d buscas | inhire:%d greenhouse:%d recrutei:%d.",
-                len(searches), len(companies), len(gh), len(rec))
-    return SearchesFile(inhire_companies=companies, greenhouse_companies=gh,
-                        recrutei_companies=rec, searches=searches)
+    resumo = " ".join(f"{p}:{len(v)}" for p, v in company_lists.items() if v)
+    logger.info("Config carregada: %d buscas | %s", len(searches), resumo or "sem listas de empresa")
+    return SearchesFile(company_lists=company_lists, searches=searches)
 
 
 def save_searches(data: SearchesFile, path: Path = DEFAULT_SEARCHES_PATH) -> None:
