@@ -426,3 +426,35 @@ def test_rescore_so_mexe_no_legado():
     # registro já pontuado não é tocado, e nenhum status muda
     assert history["atual"].score == 9 and history["atual"].confidence == "alta"
     assert [r.notification_status for r in history.values()] == ["sent", "skipped", "sent"]
+
+
+def test_exclude_locations_barra_pais_e_poupa_local_generico():
+    """Local de fora é barrado; local vazio ou genérico continua passando."""
+    prof = SearchProfile(name="br", precise=True, keywords=[], workplace_types=["remote"],
+                         exclude_locations=["united states", "san francisco", "singapore"])
+
+    def vaga(city="", country=""):
+        return JobPosting(provider="ashby", external_id="1", title="Backend Engineer",
+                          company="Acme", url="u", city=city, country=country,
+                          workplace_type=REMOTE)
+
+    assert matches(vaga(city="San Francisco"), prof).matched is False
+    assert matches(vaga(city="Remote - United States"), prof).matched is False
+    assert matches(vaga(city="Asia", country="SG"), prof).matched is True   # "SG" não está na lista
+    assert matches(vaga(city="Singapore"), prof).matched is False
+    # o que interessa preservar: sem local e local genérico seguem valendo
+    assert matches(vaga(), prof).matched is True
+    assert matches(vaga(city="Remote"), prof).matched is True
+    assert matches(vaga(city="São Paulo, Brasil"), prof).matched is True
+
+
+def test_exclude_locations_tem_prioridade_sobre_locations():
+    """Mesmo casando a lista de inclusão, local excluído não passa."""
+    prof = SearchProfile(name="bh", precise=True, keywords=[], workplace_types=["remote"],
+                         locations=["belo horizonte"], exclude_locations=["united states"])
+    fora = JobPosting(provider="lever", external_id="2", title="Data Engineer", company="Acme",
+                      url="u", city="Belo Horizonte", country="United States", workplace_type=REMOTE)
+    dentro = JobPosting(provider="lever", external_id="3", title="Data Engineer", company="Acme",
+                        url="u", city="Belo Horizonte", country="Brasil", workplace_type=REMOTE)
+    assert matches(fora, prof).matched is False
+    assert matches(dentro, prof).matched is True
