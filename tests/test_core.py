@@ -10,6 +10,13 @@ from src.providers.inhire import parse_jobs as inhire_parse, _find_job_list
 from src.providers.wwr import parse_feed as wwr_parse
 from src.providers.greenhouse import parse_jobs as gh_parse
 from src.providers.recrutei import parse_search_html as rec_parse
+from src.providers.remotive import parse_jobs as remotive_parse
+from src.providers.remoteok import parse_jobs as remoteok_parse
+from src.providers.lever import parse_jobs as lever_parse
+from src.providers.ashby import parse_jobs as ashby_parse
+from src.providers.recruitee import parse_jobs as recruitee_parse
+from src.providers.smartrecruiters import parse_jobs as smartr_parse
+from src.models import ONSITE
 from src.matcher import matches
 from src.models import infer_seniority, JobPosting, REMOTE, HYBRID
 from src.relevance import classify_title, evaluate, CONF_ALTA, CONF_MEDIA, CONF_BAIXA
@@ -209,6 +216,69 @@ def test_recrutei_global_parse():
     prof = SearchProfile(name="r", precise=True, providers=["recrutei"], workplace_types=["remote"])
     titles = [j.title for j in jobs if matches(j, prof).matched]
     assert "Desenvolvedor Backend Java Senior" in titles
+
+
+def test_remotive_parse():
+    jobs = remotive_parse({"jobs": [
+        {"id": 1, "title": "Backend Engineer", "company_name": "Acme",
+         "url": "https://remotive.com/x", "candidate_required_location": "Latin America"},
+        {"id": 2, "title": "", "company_name": "X", "url": "https://y"},  # sem título -> ignora
+    ]})
+    assert len(jobs) == 1
+    assert jobs[0].provider == "remotive" and jobs[0].workplace_type == REMOTE
+    assert jobs[0].company == "Acme"
+
+
+def test_remoteok_parse_skips_legal():
+    jobs = remoteok_parse([
+        {"legal": "aviso"},
+        {"id": "9", "position": "Data Engineer", "company": "Globex",
+         "url": "https://remoteok.com/x", "tags": ["python", "sql"]},
+    ])
+    assert len(jobs) == 1
+    assert jobs[0].title == "Data Engineer" and jobs[0].workplace_type == REMOTE
+
+
+def test_lever_parse_workplace():
+    jobs = lever_parse([
+        {"id": "a", "text": "Software Engineer", "hostedUrl": "https://jobs.lever.co/acme/a",
+         "categories": {"location": "Remote - Brazil", "team": "Eng"}, "workplaceType": "remote"},
+        {"id": "b", "text": "Designer", "hostedUrl": "https://jobs.lever.co/acme/b",
+         "categories": {"location": "São Paulo"}, "workplaceType": "on-site"},
+    ], "acme")
+    assert len(jobs) == 2
+    by = {j.title: j for j in jobs}
+    assert by["Software Engineer"].workplace_type == REMOTE
+    assert by["Designer"].workplace_type == ONSITE
+    assert by["Software Engineer"].stable_id == "lever:acme:a"
+
+
+def test_ashby_parse():
+    jobs = ashby_parse({"jobs": [
+        {"id": "1", "title": "Data Scientist", "location": "Remote", "isRemote": True,
+         "jobUrl": "https://jobs.ashbyhq.com/acme/1"},
+    ]}, "acme")
+    assert len(jobs) == 1
+    assert jobs[0].workplace_type == REMOTE and jobs[0].company == "acme"
+
+
+def test_recruitee_parse():
+    jobs = recruitee_parse({"offers": [
+        {"id": 5, "title": "DevOps Engineer", "company_name": "Acme",
+         "careers_url": "https://acme.recruitee.com/o/devops", "remote": True, "city": ""},
+    ]}, "acme")
+    assert len(jobs) == 1
+    assert jobs[0].workplace_type == REMOTE and jobs[0].title == "DevOps Engineer"
+
+
+def test_smartrecruiters_parse():
+    jobs = smartr_parse({"content": [
+        {"id": "77", "name": "Backend Developer",
+         "location": {"city": "", "region": "", "country": "br", "remote": True}},
+    ]}, "acme")
+    assert len(jobs) == 1
+    assert jobs[0].workplace_type == REMOTE
+    assert jobs[0].url == "https://jobs.smartrecruiters.com/acme/77"
 
 
 def test_wwr_international_filter_and_precision():

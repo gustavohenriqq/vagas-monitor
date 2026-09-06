@@ -6,8 +6,16 @@ from .inhire import InhireProvider
 from .wwr import WwrProvider
 from .greenhouse import GreenhouseProvider
 from .recrutei import RecruteiProvider
+from .remotive import RemotiveProvider
+from .remoteok import RemoteOkProvider
+from .lever import LeverProvider
+from .ashby import AshbyProvider
+from .recruitee import RecruteeProvider
+from .smartrecruiters import SmartRecruitersProvider
 
 __all__ = [
-    "JobProvider", "build_session", "GupyProvider", "InhireProvider",
-    "WwrProvider", "GreenhouseProvider", "RecruteiProvider",
+    "JobProvider", "build_session",
+    "GupyProvider", "InhireProvider", "WwrProvider", "GreenhouseProvider",
+    "RecruteiProvider", "RemotiveProvider", "RemoteOkProvider",
+    "LeverProvider", "AshbyProvider", "RecruteeProvider", "SmartRecruitersProvider",
 ]

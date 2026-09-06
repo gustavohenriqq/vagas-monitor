@@ -21,8 +21,9 @@ from .config import Config, load_config
 from .matcher import matches
 from .models import JobPosting
 from .providers import (
-    GupyProvider, InhireProvider, WwrProvider, GreenhouseProvider,
-    RecruteiProvider, build_session,
+    GupyProvider, InhireProvider, WwrProvider, GreenhouseProvider, RecruteiProvider,
+    RemotiveProvider, RemoteOkProvider, LeverProvider, AshbyProvider,
+    RecruteeProvider, SmartRecruitersProvider, build_session,
 )
 from .relevance import evaluate
 from .searches import SearchProfile, SearchesFile, load_searches
@@ -45,49 +46,36 @@ def setup_logging(level: str) -> None:
     )
 
 
-def collect_for_search(
-    profile: SearchProfile,
-    *,
-    gupy: GupyProvider,
-    inhire: InhireProvider,
-    wwr: WwrProvider,
-    greenhouse: GreenhouseProvider,
-    recrutei: RecruteiProvider,
-    max_jobs: int,
-    inhire_companies: list[str],
-    greenhouse_companies: list[str] | None = None,
-    recrutei_companies: list[str] | None = None,
-) -> list[JobPosting]:
+def build_provider_map(searches: SearchesFile, session, delay: float) -> dict:
+    """Instancia todos os providers, cada um já com sua lista de empresas (quando aplicável)."""
+    def c(name):
+        return searches.companies(name)
+    return {
+        "gupy": GupyProvider(session=session, delay=delay),
+        "inhire": InhireProvider(tenants=c("inhire"), session=session, delay=delay),
+        "greenhouse": GreenhouseProvider(tokens=c("greenhouse"), session=session, delay=delay),
+        "recrutei": RecruteiProvider(session=session, delay=delay),
+        "wwr": WwrProvider(session=session, delay=delay),
+        "remotive": RemotiveProvider(session=session, delay=delay),
+        "remoteok": RemoteOkProvider(session=session, delay=delay),
+        "lever": LeverProvider(companies=c("lever"), session=session, delay=delay),
+        "ashby": AshbyProvider(companies=c("ashby"), session=session, delay=delay),
+        "recruitee": RecruteeProvider(companies=c("recruitee"), session=session, delay=delay),
+        "smartrecruiters": SmartRecruitersProvider(companies=c("smartrecruiters"), session=session, delay=delay),
+    }
+
+
+def collect_for_search(profile: SearchProfile, provider_map: dict, max_jobs: int) -> list[JobPosting]:
     """Consulta os providers do perfil e devolve as vagas que casam com o filtro."""
     raw: list[JobPosting] = []
-    if "gupy" in profile.providers:
+    for name in profile.providers:
+        prov = provider_map.get(name)
+        if not prov:
+            continue
         try:
-            raw.extend(gupy.search(profile.keywords, max_jobs=max_jobs))
+            raw.extend(prov.search(profile.keywords, max_jobs=max_jobs))
         except Exception as exc:
-            logger.warning("Falha no provider Gupy para '%s': %s", profile.name, exc)
-    if "inhire" in profile.providers:
-        try:
-            raw.extend(inhire.search(profile.keywords, max_jobs=max_jobs, tenants=inhire_companies))
-        except Exception as exc:
-            logger.warning("Falha no provider inhire para '%s': %s", profile.name, exc)
-    if "wwr" in profile.providers:
-        try:
-            raw.extend(wwr.search(profile.keywords, max_jobs=max_jobs))
-        except Exception as exc:
-            logger.warning("Falha no provider WWR para '%s': %s", profile.name, exc)
-    if "greenhouse" in profile.providers:
-        try:
-            raw.extend(greenhouse.search(profile.keywords, max_jobs=max_jobs,
-                                         tokens=greenhouse_companies))
-        except Exception as exc:
-            logger.warning("Falha no provider Greenhouse para '%s': %s", profile.name, exc)
-    if "recrutei" in profile.providers:
-        try:
-            wt_map = {"remote": "remote", "hybrid": "hibrido", "onsite": "presencial"}
-            models = [wt_map[w] for w in profile.workplace_types if w in wt_map] or ["remote"]
-            raw.extend(recrutei.search(profile.keywords, max_jobs=max_jobs, models=models))
-        except Exception as exc:
-            logger.warning("Falha no provider Recrutei para '%s': %s", profile.name, exc)
+            logger.warning("Falha no provider %s para '%s': %s", name, profile.name, exc)
 
     matched = [job for job in raw if matches(job, profile).matched]
     logger.info("Busca '%s': %d coletadas, %d após filtro.", profile.name, len(raw), len(matched))
@@ -105,13 +93,7 @@ def run(config: Optional[Config] = None, searches: Optional[SearchesFile] = None
     logger.info("=== Vagas Monitor iniciando (primeira execução: %s) ===", is_first_run)
 
     session = build_session()
-    gupy = GupyProvider(session=session, delay=config.request_delay_seconds)
-    inhire = InhireProvider(tenants=searches.inhire_companies, session=session,
-                            delay=config.request_delay_seconds)
-    wwr = WwrProvider(session=session, delay=config.request_delay_seconds)
-    greenhouse = GreenhouseProvider(tokens=searches.greenhouse_companies, session=session,
-                                    delay=config.request_delay_seconds)
-    recrutei = RecruteiProvider(session=session, delay=config.request_delay_seconds)
+    provider_map = build_provider_map(searches, session, config.request_delay_seconds)
     notifier = build_notifier(config.telegram_bot_token, config.telegram_chat_id)
 
     new_count = 0
@@ -125,14 +107,7 @@ def run(config: Optional[Config] = None, searches: Optional[SearchesFile] = None
         logger.info("%d busca(s) habilitada(s).", len(enabled))
 
         for profile in enabled:
-            jobs = collect_for_search(
-                profile, gupy=gupy, inhire=inhire, wwr=wwr, greenhouse=greenhouse,
-                recrutei=recrutei,
-                max_jobs=config.max_jobs_per_search,
-                inhire_companies=searches.inhire_companies,
-                greenhouse_companies=searches.greenhouse_companies,
-                recrutei_companies=searches.recrutei_companies,
-            )
+            jobs = collect_for_search(profile, provider_map, config.max_jobs_per_search)
             for job in jobs:
                 sid = job.stable_id
                 existing = history.get(sid)
@@ -197,9 +172,9 @@ def run(config: Optional[Config] = None, searches: Optional[SearchesFile] = None
             pass
         raise
     finally:
-        gupy.close()
-        inhire.close()
-        wwr.close()
-        greenhouse.close()
-        recrutei.close()
+        for prov in provider_map.values():
+            try:
+                prov.close()
+            except Exception:
+                pass
         notifier.close()

@@ -98,6 +98,17 @@ greenhouse_companies:
 # Recrutei roda em modo GLOBAL (agregador empregos.recrutei.com.br): cobre TODAS
 # as empresas automaticamente, sem precisar listar slug por slug.
 
+# ATS por-empresa (API pública oficial). Adicione o token/slug de cada empresa e
+# inclua o provider correspondente no `providers` de uma busca para ativá-lo.
+#   Lever:           https://jobs.lever.co/<token>
+#   Ashby:           https://jobs.ashbyhq.com/<token>
+#   Recruitee:       https://<token>.recruitee.com
+#   SmartRecruiters: https://jobs.smartrecruiters.com/<token>
+lever_companies: []
+ashby_companies: []
+recruitee_companies: []
+smartrecruiters_companies: []
+
 # Cada item é um perfil de busca independente. Uma vaga é notificada se casar
 # com QUALQUER palavra de `keywords` e passar pelos demais filtros.
 searches:
@@ -205,7 +216,7 @@ searches:
     enabled: true
     profile: internacional
     precise: true
-    providers: [wwr, greenhouse]
+    providers: [wwr, greenhouse, remotive, remoteok]
     keywords: []                 # o filtro de 3 níveis já garante que é tech
     exclude_keywords: []
     seniority: []

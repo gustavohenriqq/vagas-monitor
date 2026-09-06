@@ -10,11 +10,16 @@ Inclui um **painel web local** para configurar as buscas sem editar arquivo.
 
 ## O que faz
 
-- **4 fontes públicas (sem login, sem violar ToS):**
+- **Fontes públicas (sem login, sem violar ToS):**
   - **Gupy** — busca global por palavra-chave (`employability-portal.gupy.io`), todas as empresas.
   - **inhire** — vagas das empresas (tenants) configuradas (`api.inhire.app`, por `X-Tenant`).
-  - **We Work Remotely** — feeds RSS públicos, vagas 100% remotas (internacional).
+  - **Recrutei** — modo global (agregador `empregos.recrutei.com.br`), todas as empresas.
   - **Greenhouse** — API oficial pública (`boards-api.greenhouse.io`), por board de empresa.
+  - **We Work Remotely** — feeds RSS públicos, vagas 100% remotas (internacional).
+  - **Remotive** e **RemoteOK** — APIs públicas de vagas remotas (globais).
+  - **Lever, Ashby, Recruitee, SmartRecruiters** — ATS com API pública, por empresa
+    (prontos; basta preencher a lista de tokens no `searches.yaml` e incluir o
+    provider no `providers` de uma busca).
 - **Dois perfis:**
   - **Brasil** — remoto em qualquer lugar **ou** híbrido em BH e região metropolitana.
   - **Internacional** — remoto em regiões que aceitam Brasil/LatAm (Anywhere, Latin America).
