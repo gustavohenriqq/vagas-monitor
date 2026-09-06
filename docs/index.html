@@ -263,6 +263,13 @@
     </div>
     <div class="frow">
       <div class="flabel">
+        <span>Região da vaga</span>
+        <em>pelo local declarado, não pelo perfil da busca</em>
+      </div>
+      <div class="chips" id="g-r" role="group" aria-label="Região da vaga"></div>
+    </div>
+    <div class="frow">
+      <div class="flabel">
         <span>Candidatura</span>
         <em>as marcações ficam só neste navegador — ninguém mais vê nem altera</em>
       </div>
@@ -347,7 +354,11 @@
   let dados = null, filtradas = [], pagina = 1;
   const estado = {
     st: "notificadas", q: "", s: 0, o: "d", pp: 50, ap: "",
-    sn: new Set(), w: new Set(), p: new Set(), pf: new Set(),
+    sn: new Set(), w: new Set(), p: new Set(), pf: new Set(), r: new Set(),
+  };
+  const ROT_R = {
+    brasil: "Brasil", latam: "América Latina",
+    sem_pais: "Sem país declarado", outros: "Outros países",
   };
 
   /* "Já apliquei": guardado no localStorage, indexado pela URL da vaga.
@@ -515,6 +526,7 @@
       if (e.p.size && !e.p.has(v.p)) return false;
       if (e.pf.size && !e.pf.has(v.pf)) return false;
       if (e.w.size && !e.w.has(v.w)) return false;
+      if (e.r.size && !e.r.has(v.r || "sem_pais")) return false;
       // Sem senioridade declarada passa em qualquer seleção de nível.
       if (e.sn.size && !e.sn.has(v.sn) && SEM_NIVEL.indexOf(v.sn || "") === -1) return false;
       if (v.s < e.s) return false;
@@ -625,6 +637,7 @@
       if (estado.ap) aplicar();
     });
 
+    grupoMulti($("#g-r"), ag.regiao || contar("r"), ROT_R, estado.r);
     grupoMulti($("#g-sn"), contar("sn"), ROT_SN, estado.sn);
     grupoMulti($("#g-w"), contar("w"), ROT_W, estado.w);
     grupoMulti($("#g-p"), ag.provider, null, estado.p);
@@ -655,7 +668,7 @@
       // Limpa só os filtros. As marcações de "já apliquei" continuam:
       // apagá-las aqui seria perder dado que você digitou, não um filtro.
       estado.st = "notificadas"; estado.q = ""; estado.s = 0; estado.o = "d"; estado.ap = "";
-      [estado.sn, estado.w, estado.p, estado.pf].forEach((c) => c.clear());
+      [estado.sn, estado.w, estado.p, estado.pf, estado.r].forEach((c) => c.clear());
       pintarCandidatura();
       $("#q").value = ""; $("#f-o").value = "d"; $("#f-s").value = "0"; $("#f-s-out").value = "0";
       document.querySelectorAll(".chips button[data-v]").forEach((x) => x.setAttribute("aria-pressed", "false"));
