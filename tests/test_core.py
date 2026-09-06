@@ -396,3 +396,33 @@ def test_dashboard_payload():
     primeira = p["vagas"][0]
     assert primeira["l"] == "Belo Horizonte, MG"      # local montado sem campos vazios
     assert primeira["u"] == "https://x/2" and primeira["st"] == "digest"
+
+
+def test_rescore_so_mexe_no_legado():
+    """Repontua registro sem confiança e não encosta no resto."""
+    from src.rescore import rescore
+    from src.storage import JobRecord
+
+    def rec(sid, titulo, score, conf, status):
+        job = JobPosting(provider="gupy", external_id=sid, title=titulo, company="Acme",
+                         url=f"https://x/{sid}", workplace_type=REMOTE, seniority="senior")
+        return JobRecord(stable_id=f"gupy:{sid}", job=job, first_seen_at="2026-08-05T10:00:00+00:00",
+                         last_seen_at="2026-08-05T10:00:00+00:00", notification_status=status,
+                         score=score, confidence=conf)
+
+    history = {
+        "legado": rec("1", "Engenheiro de Dados Sênior", 0, "", "sent"),
+        "legado_nao_tech": rec("2", "Auxiliar de Limpeza", 0, "", "skipped"),
+        "atual": rec("3", "Desenvolvedor Python", 9, "alta", "sent"),
+    }
+    resumo = rescore(history)
+
+    assert resumo["legados"] == 2 and resumo["intactos"] == 1
+    # o legado de tech ganha score e confiança de verdade
+    assert history["legado"].score >= 7 and history["legado"].confidence == "alta"
+    # o que não é tech fica em 0, mas agora marcado como "nenhum", não vazio
+    assert history["legado_nao_tech"].score == 0
+    assert history["legado_nao_tech"].confidence == "nenhum"
+    # registro já pontuado não é tocado, e nenhum status muda
+    assert history["atual"].score == 9 and history["atual"].confidence == "alta"
+    assert [r.notification_status for r in history.values()] == ["sent", "skipped", "sent"]
