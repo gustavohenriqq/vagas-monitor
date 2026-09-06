@@ -1,1676 +1,595 @@
 <!doctype html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Radar de Vagas — Monitoramento de Oportunidades</title>
+<meta name="color-scheme" content="dark light">
+<title>Radar de Vagas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-  :root {
-    --bg-page: #f8fafc;
-    --bg-surface: #ffffff;
-    --bg-subtle: #f1f5f9;
-    --bg-hover: #f8fafc;
-    --border: #e2e8f0;
-    --border-strong: #cbd5e1;
-    --border-focus: #0f172a;
-    
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #64748b;
-    --text-subtle: #94a3b8;
-    
-    --accent-primary: #0f172a;
-    --accent-hover: #1e293b;
-    --accent-contrast: #ffffff;
-    
-    --match-high: #059669;
-    --match-high-bg: #ecfdf5;
-    --match-high-border: #a7f3d0;
-    
-    --match-mid: #d97706;
-    --match-mid-bg: #fffbeb;
-    --match-mid-border: #fde68a;
-    
-    --match-low: #64748b;
-    --match-low-bg: #f1f5f9;
-    --match-low-border: #e2e8f0;
-
-    --status-sent-text: #047857;
-    --status-sent-bg: #d1fae5;
-    --status-digest-text: #0369a1;
-    --status-digest-bg: #e0f2fe;
-    --status-skipped-text: #64748b;
-    --status-skipped-bg: #f1f5f9;
-
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-    --shadow-lg: 0 12px 28px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
-
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-full: 9999px;
-
-    --font-heading: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-    --font-body: "Inter", system-ui, -apple-system, sans-serif;
-    --font-mono: "JetBrains Mono", monospace;
-  }
-
-  [data-theme="dark"] {
-    --bg-page: #0b0f17;
-    --bg-surface: #111726;
-    --bg-subtle: #182235;
-    --bg-hover: #1e2b42;
-    --border: rgba(255, 255, 255, 0.08);
-    --border-strong: rgba(255, 255, 255, 0.16);
-    --border-focus: #38bdf8;
-
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
-    --text-subtle: #64748b;
-
-    --accent-primary: #38bdf8;
-    --accent-hover: #7dd3fc;
-    --accent-contrast: #0b0f17;
-
-    --match-high: #10b981;
-    --match-high-bg: rgba(16, 185, 129, 0.14);
-    --match-high-border: rgba(16, 185, 129, 0.35);
-
-    --match-mid: #fbbf24;
-    --match-mid-bg: rgba(251, 191, 36, 0.14);
-    --match-mid-border: rgba(251, 191, 36, 0.35);
-
-    --match-low: #94a3b8;
-    --match-low-bg: rgba(148, 163, 184, 0.1);
-    --match-low-border: rgba(148, 163, 184, 0.2);
-
-    --status-sent-text: #34d399;
-    --status-sent-bg: rgba(16, 185, 129, 0.15);
-    --status-digest-text: #38bdf8;
-    --status-digest-bg: rgba(56, 189, 248, 0.15);
-    --status-skipped-text: #94a3b8;
-    --status-skipped-bg: rgba(148, 163, 184, 0.12);
-
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 16px 36px -4px rgba(0, 0, 0, 0.55);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-
-  body {
-    font-family: var(--font-body);
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--text-primary);
-    background-color: var(--bg-page);
-    min-height: 100vh;
-    transition: background-color 0.2s ease, color 0.2s ease;
-  }
-
-  /* ---------- NAVBAR ---------- */
-  .navbar {
-    background-color: var(--bg-surface);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-  }
-
-  .nav-wrap {
-    max-width: 1360px;
-    margin: 0 auto;
-    padding: 0 24px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-decoration: none;
-    color: var(--text-primary);
-  }
-
-  .brand-logo {
-    width: 32px;
-    height: 32px;
-    background-color: var(--accent-primary);
-    color: var(--accent-contrast);
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 16px;
-    font-family: var(--font-heading);
-  }
-
-  .brand-info {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .brand-name {
-    font-family: var(--font-heading);
-    font-weight: 800;
-    font-size: 17px;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-  }
-
-  .brand-tag {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-
-  .nav-stats {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .nav-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--bg-subtle);
-    padding: 6px 12px;
-    border-radius: var(--radius-full);
-    font-size: 12.5px;
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
-
-  .nav-pill strong {
-    color: var(--text-primary);
-    font-weight: 700;
-  }
-
-  .live-dot {
-    width: 8px;
-    height: 8px;
-    background-color: var(--match-high);
-    border-radius: 50%;
-    position: relative;
-  }
-
-  .live-dot::after {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border-radius: 50%;
-    background-color: var(--match-high);
-    opacity: 0.4;
-    animation: live-pulse 2s infinite;
-  }
-
-  @keyframes live-pulse {
-    0% { transform: scale(1); opacity: 0.6; }
-    70% { transform: scale(2.2); opacity: 0; }
-    100% { transform: scale(2.2); opacity: 0; }
-  }
-
-  .theme-toggle-btn {
-    background-color: var(--bg-subtle);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .theme-toggle-btn:hover {
-    color: var(--text-primary);
-    background-color: var(--bg-hover);
-    border-color: var(--border-strong);
-  }
-
-  .theme-toggle-btn svg {
-    width: 17px;
-    height: 17px;
-  }
-
-  /* ---------- CONTAINER PRINCIPAL ---------- */
-  .main-layout {
-    max-width: 1360px;
-    margin: 0 auto;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  /* ---------- SEARCH BANNER (JOBSEEKER / TALENTLY STYLE) ---------- */
-  .search-banner {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 10px 12px;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
-  }
-
-  .search-banner:focus-within {
-    box-shadow: var(--shadow-md);
-    border-color: var(--border-strong);
-  }
-
-  .search-input-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1 1 280px;
-    padding: 8px 12px;
-    min-width: 220px;
-  }
-
-  .search-input-group svg {
-    color: var(--text-subtle);
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-  }
-
-  .search-input-group input {
-    border: none;
-    background: transparent;
-    font-family: var(--font-body);
-    font-size: 14.5px;
-    color: var(--text-primary);
-    width: 100%;
-    outline: none;
-  }
-
-  .search-input-group input::placeholder {
-    color: var(--text-subtle);
-  }
-
-  .search-divider {
-    width: 1px;
-    height: 30px;
-    background-color: var(--border);
-  }
-
-  .search-select-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 0 1 190px;
-    padding: 8px 12px;
-  }
-
-  .search-select-group svg {
-    color: var(--text-subtle);
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-  }
-
-  .search-select-group select {
-    border: none;
-    background: transparent;
-    font-family: var(--font-body);
-    font-size: 13.5px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    width: 100%;
-    outline: none;
-    cursor: pointer;
-  }
-
-  .search-select-group select option {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-  }
-
-  .btn-search {
-    background-color: var(--accent-primary);
-    color: var(--accent-contrast);
-    border: none;
-    border-radius: var(--radius-full);
-    padding: 11px 22px;
-    font-family: var(--font-heading);
-    font-weight: 600;
-    font-size: 13.5px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: background-color 0.15s ease, transform 0.1s ease;
-    flex-shrink: 0;
-  }
-
-  .btn-search:hover {
-    background-color: var(--accent-hover);
-    transform: translateY(-1px);
-  }
-
-  .btn-search svg {
-    width: 15px;
-    height: 15px;
-  }
-
-  /* ---------- CONTEÚDO EM 2 COLUNAS ---------- */
-  .content-grid {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 28px;
-    align-items: start;
-  }
-
-  /* ---------- SIDEBAR DE FILTROS ---------- */
-  .sidebar {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 22px;
-    box-shadow: var(--shadow-sm);
-    position: sticky;
-    top: 84px;
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-  }
-
-  .sidebar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sidebar-title {
-    font-family: var(--font-heading);
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-  }
-
-  .btn-clear-filters {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 12.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: color 0.15s ease;
-  }
-
-  .btn-clear-filters:hover {
-    color: var(--text-primary);
-    text-decoration: underline;
-  }
-
-  .filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .filter-label {
-    font-family: var(--font-heading);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-  }
-
-  .filter-options {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .custom-checkbox-label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 8px;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: background-color 0.12s ease;
-    user-select: none;
-  }
-
-  .custom-checkbox-label:hover {
-    background-color: var(--bg-subtle);
-    color: var(--text-primary);
-  }
-
-  .custom-checkbox-label.active {
-    background-color: var(--bg-subtle);
-    color: var(--text-primary);
-    font-weight: 600;
-  }
-
-  .checkbox-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .checkbox-left input[type="radio"] {
-    accent-color: var(--accent-primary);
-    cursor: pointer;
-  }
-
-  .badge-count {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    background-color: var(--bg-subtle);
-    padding: 2px 6px;
-    border-radius: var(--radius-full);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .score-slider-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 4px 0;
-  }
-
-  .slider-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12.5px;
-    color: var(--text-secondary);
-  }
-
-  .slider-header strong {
-    font-family: var(--font-mono);
-    color: var(--match-high);
-    font-weight: 700;
-    background: var(--match-high-bg);
-    border: 1px solid var(--match-high-border);
-    padding: 2px 7px;
-    border-radius: var(--radius-sm);
-  }
-
-  input[type="range"] {
-    width: 100%;
-    accent-color: var(--accent-primary);
-    cursor: pointer;
-  }
-
-  .sidebar-banner {
-    background-color: var(--bg-subtle);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .sidebar-banner-title {
-    font-family: var(--font-heading);
-    font-size: 12.5px;
-    font-weight: 700;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .sidebar-banner-desc {
-    font-size: 11.5px;
-    color: var(--text-muted);
-    line-height: 1.45;
-  }
-
-  /* ---------- ÁREA PRINCIPAL DE RESULTADOS ---------- */
-  .feed-column {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    min-width: 0;
-  }
-
-  /* Barra de cabeçalho do feed */
-  .feed-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .feed-title-wrap {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-  }
-
-  .feed-title {
-    font-family: var(--font-heading);
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-  }
-
-  .feed-counter {
-    font-size: 13.5px;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-
-  .feed-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .btn-analytics-toggle {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    border-radius: var(--radius-full);
-    padding: 7px 14px;
-    font-size: 12.5px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.15s ease;
-  }
-
-  .btn-analytics-toggle:hover {
-    color: var(--text-primary);
-    border-color: var(--border-strong);
-    background-color: var(--bg-hover);
-  }
-
-  .btn-analytics-toggle svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  /* Painel colapsável de Analytics */
-  .analytics-drawer {
-    display: none;
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    box-shadow: var(--shadow-sm);
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  .analytics-drawer.open {
-    display: grid;
-  }
-
-  @media (max-width: 900px) {
-    .analytics-drawer.open { grid-template-columns: 1fr; }
-  }
-
-  .chart-box h4 {
-    font-family: var(--font-heading);
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 2px;
-  }
-
-  .chart-box p {
-    font-size: 11.5px;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-  }
-
-  /* ---------- GRID DE CARDS DE VAGAS ---------- */
-  .job-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-    gap: 18px;
-    list-style: none;
-  }
-
-  .job-card {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 18px;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 16px;
-    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease;
-  }
-
-  .job-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--border-strong);
-  }
-
-  .card-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .company-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .company-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background-color: var(--bg-subtle);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-heading);
-    font-weight: 700;
-    font-size: 15px;
-    color: var(--text-secondary);
-    flex-shrink: 0;
-    text-transform: uppercase;
-  }
-
-  .company-meta {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .company-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .verified-icon {
-    width: 14px;
-    height: 14px;
-    color: #2563eb;
-    flex-shrink: 0;
-  }
-
-  .job-date {
-    font-size: 11px;
-    color: var(--text-subtle);
-    font-family: var(--font-mono);
-  }
-
-  .status-pill {
-    font-size: 10.5px;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: var(--radius-full);
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .status-sent {
-    background-color: var(--status-sent-bg);
-    color: var(--status-sent-text);
-  }
-
-  .status-digest {
-    background-color: var(--status-digest-bg);
-    color: var(--status-digest-text);
-  }
-
-  .status-skipped {
-    background-color: var(--status-skipped-bg);
-    color: var(--status-skipped-text);
-  }
-
-  .card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .job-title {
-    font-family: var(--font-heading);
-    font-size: 15.5px;
-    font-weight: 700;
-    line-height: 1.35;
-    letter-spacing: -0.01em;
-    color: var(--text-primary);
-    text-decoration: none;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    transition: color 0.15s ease;
-  }
-
-  .job-card:hover .job-title {
-    color: var(--accent-primary);
-  }
-
-  [data-theme="dark"] .job-card:hover .job-title {
-    color: var(--accent-primary);
-  }
-
-  .card-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-  }
-
-  .pill-tag {
-    font-size: 11.5px;
-    font-weight: 500;
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-    background-color: var(--bg-subtle);
-    color: var(--text-secondary);
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .pill-tag svg {
-    width: 12px;
-    height: 12px;
-    color: var(--text-muted);
-  }
-
-  .pill-tag-remote {
-    background-color: var(--match-high-bg);
-    color: var(--match-high);
-    font-weight: 600;
-  }
-
-  .pill-tag-provider {
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    text-transform: lowercase;
-    background-color: var(--bg-subtle);
-    border: 1px solid var(--border);
-  }
-
-  /* Rodapé do card: Anel de Match circular (Your Job Match Style) */
-  .card-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-    gap: 10px;
-  }
-
-  .match-gauge-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .circular-gauge {
-    width: 36px;
-    height: 36px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .circular-gauge svg {
-    transform: rotate(-90deg);
-    width: 100%;
-    height: 100%;
-  }
-
-  .circular-gauge circle {
-    fill: none;
-    stroke-width: 3.5;
-    stroke-linecap: round;
-  }
-
-  .gauge-bg {
-    stroke: var(--border);
-  }
-
-  .gauge-fill {
-    transition: stroke-dashoffset 0.5s ease;
-  }
-
-  .gauge-score-text {
-    position: absolute;
-    font-family: var(--font-heading);
-    font-size: 11.5px;
-    font-weight: 800;
-    color: var(--text-primary);
-  }
-
-  .match-info {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .match-label {
-    font-size: 12px;
-    font-weight: 700;
-    font-family: var(--font-heading);
-    color: var(--text-primary);
-    line-height: 1.1;
-  }
-
-  .match-sub {
-    font-size: 10.5px;
-    color: var(--text-muted);
-  }
-
-  .btn-apply {
-    background-color: var(--accent-primary);
-    color: var(--accent-contrast);
-    text-decoration: none;
-    font-family: var(--font-heading);
-    font-size: 12.5px;
-    font-weight: 600;
-    padding: 7px 14px;
-    border-radius: var(--radius-full);
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    transition: background-color 0.15s ease, transform 0.1s ease;
-    flex-shrink: 0;
-  }
-
-  .btn-apply:hover {
-    background-color: var(--accent-hover);
-    transform: translateY(-1px);
-  }
-
-  .btn-apply svg {
-    width: 12px;
-    height: 12px;
-  }
-
-  /* Empty state */
-  .empty-state {
-    grid-column: 1 / -1;
-    background-color: var(--bg-surface);
-    border: 1px dashed var(--border);
-    border-radius: var(--radius-lg);
-    padding: 60px 24px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .empty-state svg {
-    width: 44px;
-    height: 44px;
-    color: var(--text-subtle);
-  }
-
-  .empty-state h3 {
-    font-family: var(--font-heading);
-    font-size: 16px;
-    font-weight: 700;
-  }
-
-  .empty-state p {
-    font-size: 13px;
-    color: var(--text-muted);
-    max-width: 38ch;
-  }
-
-  /* Paginação / Carregar Mais */
-  .load-more-wrap {
-    display: flex;
-    justify-content: center;
-    margin-top: 10px;
-  }
-
-  .btn-load-more {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    font-family: var(--font-heading);
-    font-size: 13.5px;
-    font-weight: 600;
-    padding: 10px 24px;
-    border-radius: var(--radius-full);
-    cursor: pointer;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.15s ease;
-  }
-
-  .btn-load-more:hover {
-    background-color: var(--bg-subtle);
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-md);
-  }
-
-  /* Footer */
-  footer {
-    border-top: 1px solid var(--border);
-    background-color: var(--bg-surface);
-    padding: 24px 0;
-    margin-top: 40px;
-  }
-
-  .footer-wrap {
-    max-width: 1360px;
-    margin: 0 auto;
-    padding: 0 24px;
-    font-size: 12px;
-    color: var(--text-muted);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .footer-wrap code {
-    font-family: var(--font-mono);
-    background-color: var(--bg-subtle);
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-
-  /* Responsividade */
-  @media (max-width: 960px) {
-    .content-grid {
-      grid-template-columns: 1fr;
-    }
-    .sidebar {
-      position: static;
-    }
-    .search-divider {
-      display: none;
+  /* Escuro é o padrão (Dark Intelligence). O claro entra por [data-theme="light"]
+     e por prefers-color-scheme quando o visitante nunca escolheu. */
+  :root{
+    --ground:#0a0e27; --ground-2:#0d1330;
+    --surface:rgba(255,255,255,.045);
+    --line:rgba(255,255,255,.10); --line-soft:rgba(255,255,255,.055);
+    --emerald:#34d399; --emerald-dim:rgba(52,211,153,.14);
+    --cyan:#22d3ee; --amber:#fbbf24;
+    --amber-dim:rgba(251,191,36,.13); --slate-dim:rgba(148,163,184,.12);
+    --ink:#f1f5f9; --ink-2:#cbd5e1; --ink-3:#94a3b8; --ink-4:#6b7a90;
+    --grid-line:rgba(148,163,184,.055); --bar-idle:rgba(148,163,184,.34);
+    --shadow:0 18px 48px -22px rgba(0,0,0,.85);
+    --display:"Clash Grotesk","Sora",system-ui,sans-serif;
+    --body:"Satoshi","Inter",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,monospace;
+    --r:14px; --r-sm:9px;
+  }
+  :root[data-theme="light"]{
+    --ground:#f6f7fb; --ground-2:#ffffff; --surface:#ffffff;
+    --line:#dfe3ed; --line-soft:#e9ecf4;
+    --emerald:#047857; --emerald-dim:rgba(4,120,87,.10);
+    --cyan:#0e7490; --amber:#a16207;
+    --amber-dim:rgba(161,98,7,.10); --slate-dim:rgba(100,116,139,.10);
+    --ink:#111827; --ink-2:#334155; --ink-3:#5b6b80; --ink-4:#78889c;
+    --grid-line:rgba(15,23,42,.07); --bar-idle:rgba(100,116,139,.32);
+    --shadow:0 12px 32px -20px rgba(15,23,42,.4);
+  }
+  @media (prefers-color-scheme:light){
+    :root:not([data-theme="dark"]){
+      --ground:#f6f7fb; --ground-2:#ffffff; --surface:#ffffff;
+      --line:#dfe3ed; --line-soft:#e9ecf4;
+      --emerald:#047857; --emerald-dim:rgba(4,120,87,.10);
+      --cyan:#0e7490; --amber:#a16207;
+      --amber-dim:rgba(161,98,7,.10); --slate-dim:rgba(100,116,139,.10);
+      --ink:#111827; --ink-2:#334155; --ink-3:#5b6b80; --ink-4:#78889c;
+      --grid-line:rgba(15,23,42,.07); --bar-idle:rgba(100,116,139,.32);
+      --shadow:0 12px 32px -20px rgba(15,23,42,.4);
     }
   }
 
-  @media (max-width: 640px) {
-    .main-layout {
-      padding: 16px;
-    }
-    .nav-wrap {
-      padding: 0 16px;
-    }
-    .search-banner {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .btn-search {
-      justify-content: center;
-    }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font:400 15px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
+    background-size:44px 44px;
+    -webkit-mask-image:linear-gradient(180deg,#000,transparent 62%);
+    mask-image:linear-gradient(180deg,#000,transparent 62%);
   }
+  .wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 22px 64px}
+  a{color:inherit}
+  :is(a,button,input,select):focus-visible{outline:2px solid var(--emerald);outline-offset:2px;border-radius:4px}
+
+  .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    padding:14px 0;background:var(--ground);border-bottom:1px solid var(--line-soft)}
+  .brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+  .brand .sig{width:30px;height:30px;border-radius:9px;flex:none;background:var(--emerald-dim);
+    border:1px solid var(--emerald);display:grid;place-items:center}
+  .brand .sig i{width:8px;height:8px;border-radius:50%;background:var(--emerald);display:block}
+  .brand b{font:600 15px/1.2 var(--display);letter-spacing:-.01em}
+  .brand small{display:block;font:500 10.5px/1.4 var(--mono);letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-4)}
+  .top-stat{display:flex;align-items:baseline;gap:7px;font-size:12.5px;color:var(--ink-3)}
+  .top-stat b{font:700 15px var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+  .icon-btn{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font:500 12.5px var(--body);
+    color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:99px;
+    padding:7px 13px;transition:border-color .18s,color .18s}
+  .icon-btn:hover{border-color:var(--emerald);color:var(--ink)}
+  .icon-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round}
+
+  header{padding:30px 0 8px}
+  h1{font:600 clamp(28px,4.4vw,40px)/1.06 var(--display);letter-spacing:-.025em;
+    margin:0 0 10px;text-wrap:balance}
+  .lede{margin:0;color:var(--ink-3);max-width:66ch}
+  .lede b{color:var(--ink-2);font-weight:600}
+
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px;margin:24px 0 0}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px}
+  .tile dt{margin:0 0 8px;font:500 10.5px/1 var(--mono);letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-4)}
+  .tile dd{margin:0;font:700 26px/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .tile dd em{font:500 11.5px/1 var(--body);font-style:normal;color:var(--ink-4);margin-left:7px}
+  .t-em dd{color:var(--emerald)} .t-cy dd{color:var(--cyan)} .t-am dd{color:var(--amber)}
+
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  @media (max-width:880px){.charts{grid-template-columns:1fr}}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:17px 18px}
+  .panel h2{font:600 14px/1.2 var(--display);margin:0 0 2px}
+  .panel p{margin:0 0 14px;color:var(--ink-4);font-size:12.5px}
+  .panel svg{display:block;width:100%;height:auto;overflow:visible}
+  .g-grid{stroke:var(--grid-line);stroke-width:1}
+  .g-tick{font:500 10.5px var(--mono);fill:var(--ink-4)}
+  .g-val{font:700 11px var(--mono);fill:var(--ink-2)}
+  .g-lab{font:500 12px var(--body);fill:var(--ink-2)}
+  .g-bar{transition:opacity .15s}
+  .g-bar:hover{opacity:.7}
+
+  /* ---- filtros ---- */
+  .filters{margin-top:24px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r);padding:16px 17px;display:flex;flex-direction:column;gap:15px}
+  .frow{display:flex;flex-direction:column;gap:8px}
+  .flabel{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .flabel span{font:500 10.5px/1 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--ink-4)}
+  .flabel em{font-style:normal;font-size:11.5px;color:var(--ink-4);opacity:.85}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chips button{cursor:pointer;font:500 12.5px var(--body);color:var(--ink-3);background:transparent;
+    border:1px solid var(--line);border-radius:99px;padding:6px 13px;display:inline-flex;
+    align-items:center;gap:7px;transition:border-color .16s,color .16s,background .16s}
+  .chips button .n{font:700 10.5px var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-4)}
+  .chips button:hover{border-color:var(--ink-4);color:var(--ink-2)}
+  .chips button[aria-pressed="true"]{background:var(--emerald-dim);border-color:var(--emerald);color:var(--ink)}
+  .chips button[aria-pressed="true"] .n{color:var(--emerald)}
+  .inline{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+  .fld{display:flex;flex-direction:column;gap:6px}
+  .fld label{font:500 10.5px/1 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--ink-4)}
+  .fld.grow{flex:1 1 250px;min-width:190px}
+  input[type=search],select{font:400 13.5px var(--body);color:var(--ink);width:100%;
+    background:var(--ground-2);border:1px solid var(--line);border-radius:var(--r-sm);
+    padding:8px 11px;appearance:none}
+  select{padding-right:28px;color:var(--ink-2);
+    background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),
+                     linear-gradient(135deg,currentColor 50%,transparent 50%);
+    background-position:calc(100% - 16px) 53%,calc(100% - 11px) 53%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  input[type=range]{width:118px;accent-color:var(--emerald);background:transparent}
+  .rng{display:flex;align-items:center;gap:9px;height:34px}
+  .rng output{font:700 13px var(--mono);color:var(--emerald);min-width:1.3em;font-variant-numeric:tabular-nums}
+  .ghost{cursor:pointer;font:500 12.5px var(--body);color:var(--ink-3);background:transparent;
+    border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 13px;height:34px;
+    transition:border-color .18s,color .18s}
+  .ghost:hover{border-color:var(--ink-4);color:var(--ink)}
+
+  .resbar{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    flex-wrap:wrap;margin:20px 0 11px}
+  .resbar .cnt{color:var(--ink-3);font-size:13px}
+  .resbar .cnt b{color:var(--ink);font:700 13px var(--mono);font-variant-numeric:tabular-nums}
+  .resbar .pp{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-4)}
+  .resbar .pp select{width:auto;padding:6px 26px 6px 9px;font-size:12.5px}
+
+  ol.feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+  .job{display:grid;grid-template-columns:56px 1fr auto;gap:15px;align-items:center;
+    background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
+    padding:12px 15px;transition:border-color .18s,transform .18s,box-shadow .18s}
+  .job:hover{border-color:var(--line);transform:translateY(-1px);box-shadow:var(--shadow)}
+  .sc{border-radius:var(--r-sm);padding:8px 0;text-align:center;border:1px solid transparent}
+  .sc b{display:block;font:700 17px/1 var(--mono);font-variant-numeric:tabular-nums}
+  .sc i{display:block;font:500 9px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;
+    font-style:normal;margin-top:4px;opacity:.85}
+  .sc-max{background:var(--emerald);color:var(--ground)}
+  :root[data-theme="light"] .sc-max{color:#fff}
+  .sc-hi{background:var(--emerald-dim);color:var(--emerald);border-color:var(--emerald)}
+  .sc-mid{background:var(--amber-dim);color:var(--amber);border-color:var(--amber)}
+  .sc-low{background:var(--slate-dim);color:var(--ink-4)}
+  .jmain{min-width:0}
+  .jtitle{margin:0 0 5px;font:500 15px/1.35 var(--body)}
+  .jtitle a{text-decoration:none}
+  .jtitle a:hover{color:var(--emerald);text-decoration:underline;text-underline-offset:3px}
+  .jmeta{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:center;color:var(--ink-4);font-size:12.5px}
+  .jmeta .co{color:var(--ink-2);font-weight:600}
+  .chip{font:500 10px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;
+    border:1px solid var(--line);border-radius:5px;padding:4px 6px;color:var(--ink-3)}
+  .chip.nd{border-style:dashed;opacity:.75}
+  .jside{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;flex:none}
+  .st{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font:500 11px/1 var(--mono);
+    letter-spacing:.05em;text-transform:uppercase}
+  .st .d{width:6px;height:6px;border-radius:50%;flex:none}
+  .st-sent{color:var(--emerald)} .st-sent .d{background:var(--emerald)}
+  .st-digest{color:var(--cyan)} .st-digest .d{background:var(--cyan)}
+  .st-skipped{color:var(--ink-4)} .st-skipped .d{background:var(--ink-4)}
+  .st-pending{color:var(--amber)} .st-pending .d{background:var(--amber)}
+  .when{font:500 11.5px var(--mono);color:var(--ink-4);font-variant-numeric:tabular-nums}
+  @media (max-width:720px){
+    .job{grid-template-columns:50px 1fr}
+    .jside{grid-column:2;flex-direction:row;align-items:center;gap:12px;text-align:left}
+  }
+  .empty{padding:46px 22px;text-align:center;color:var(--ink-3);
+    border:1px dashed var(--line);border-radius:var(--r)}
+
+  .pager{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;margin:22px 0 0}
+  .pager button{cursor:pointer;min-width:36px;height:36px;padding:0 10px;font:500 13px var(--body);
+    font-variant-numeric:tabular-nums;color:var(--ink-2);background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r-sm);
+    transition:border-color .18s,color .18s,background .18s}
+  .pager button:hover:not(:disabled){border-color:var(--emerald);color:var(--ink)}
+  .pager button:disabled{opacity:.38;cursor:not-allowed}
+  .pager button[aria-current="page"]{background:var(--emerald);border-color:var(--emerald);
+    color:var(--ground);font-weight:700}
+  :root[data-theme="light"] .pager button[aria-current="page"]{color:#fff}
+  .pager .gap{color:var(--ink-4);padding:0 3px;font:500 13px var(--mono)}
+
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line-soft);color:var(--ink-4);
+    font-size:12.5px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  footer code{font:500 12px var(--mono);color:var(--ink-3)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<!-- BARRA DE NAVEGAÇÃO -->
-<header class="navbar">
-  <div class="nav-wrap">
-    <a href="#" class="brand">
-      <div class="brand-logo">R</div>
-      <div class="brand-info">
-        <span class="brand-name">Radar de Vagas</span>
-        <span class="brand-tag">Monitor de Oportunidades</span>
-      </div>
-    </a>
-
-    <div class="nav-stats">
-      <div class="nav-pill">
-        <span class="live-dot"></span>
-        <span>Notificadas: <strong id="nav-notificadas">-</strong></span>
-      </div>
-      <div class="nav-pill">
-        <span>Histórico: <strong id="nav-total">-</strong></span>
-      </div>
-      <button type="button" class="theme-toggle-btn" id="btn-theme" title="Alternar tema claro/escuro" aria-label="Alternar tema">
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-      </button>
+  <div class="top">
+    <div class="brand">
+      <span class="sig"><i></i></span>
+      <span><b>Radar de Vagas</b><small>Vagas Monitor</small></span>
     </div>
-  </div>
-</header>
-
-<main class="main-layout">
-
-  <!-- SEARCH BANNER INTEGRADO -->
-  <section class="search-banner">
-    <div class="search-input-group">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      <input type="search" id="q" placeholder="Buscar por cargo, empresa ou tecnologia..." autocomplete="off">
-    </div>
-
-    <div class="search-divider"></div>
-
-    <div class="search-select-group">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-        <circle cx="12" cy="10" r="3"></circle>
-      </svg>
-      <select id="f-w">
-        <option value="">Qualquer modelo</option>
-      </select>
-    </div>
-
-    <div class="search-divider"></div>
-
-    <div class="search-select-group">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-      </svg>
-      <select id="f-p">
-        <option value="">Todas as fontes</option>
-      </select>
-    </div>
-
-    <button type="button" class="btn-search" id="btn-search-trigger">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      Buscar
+    <span class="top-stat"><b id="s-total">—</b> no histórico</span>
+    <span class="top-stat"><b id="s-notif">—</b> notificadas</span>
+    <button class="icon-btn" id="btn-tema" type="button" aria-label="Alternar tema">
+      <svg id="ico-tema" viewBox="0 0 24 24"></svg><span id="txt-tema">Claro</span>
     </button>
-  </section>
+  </div>
 
-  <!-- GRID DE CONTEÚDO (SIDEBAR + FEED) -->
-  <div class="content-grid">
-    
-    <!-- SIDEBAR DE FILTROS -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <span class="sidebar-title">Filtros</span>
-        <button type="button" class="btn-clear-filters" id="reset">Limpar filtros</button>
-      </div>
+  <header>
+    <h1>O que o monitor achou por você</h1>
+    <p class="lede" id="lede">Carregando o histórico…</p>
+    <dl class="tiles" id="tiles"></dl>
+  </header>
 
-      <!-- Situação -->
-      <div class="filter-group">
-        <span class="filter-label">Situação no Telegram</span>
-        <div class="filter-options" id="filter-st-options">
-          <label class="custom-checkbox-label active">
-            <span class="checkbox-left">
-              <input type="radio" name="st-radio" value="notificadas" checked>
-              <span>Notificadas</span>
-            </span>
-            <span class="badge-count" id="badge-st-notificadas">-</span>
-          </label>
-          <label class="custom-checkbox-label">
-            <span class="checkbox-left">
-              <input type="radio" name="st-radio" value="sent">
-              <span>Alerta imediato</span>
-            </span>
-            <span class="badge-count" id="badge-st-sent">-</span>
-          </label>
-          <label class="custom-checkbox-label">
-            <span class="checkbox-left">
-              <input type="radio" name="st-radio" value="digest">
-              <span>No digest</span>
-            </span>
-            <span class="badge-count" id="badge-st-digest">-</span>
-          </label>
-          <label class="custom-checkbox-label">
-            <span class="checkbox-left">
-              <input type="radio" name="st-radio" value="">
-              <span>Todas do histórico</span>
-            </span>
-            <span class="badge-count" id="badge-st-all">-</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Score Mínimo -->
-      <div class="filter-group">
-        <span class="filter-label">Score Mínimo</span>
-        <div class="score-slider-wrap">
-          <div class="slider-header">
-            <span>Relevância mínima</span>
-            <strong id="f-s-out">0 / 10</strong>
-          </div>
-          <input type="range" id="f-s" min="0" max="10" step="1" value="0">
-        </div>
-      </div>
-
-      <!-- Perfil -->
-      <div class="filter-group">
-        <span class="filter-label">Perfil da Vaga</span>
-        <div class="filter-options">
-          <select id="f-pf" style="border: 1px solid var(--border); padding: 8px 10px; border-radius: var(--radius-sm); font-size: 13px; background: transparent; color: var(--text-primary);">
-            <option value="">Todos os perfis</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Ordenação -->
-      <div class="filter-group">
-        <span class="filter-label">Ordenar Por</span>
-        <div class="filter-options">
-          <select id="f-o" style="border: 1px solid var(--border); padding: 8px 10px; border-radius: var(--radius-sm); font-size: 13px; background: transparent; color: var(--text-primary);">
-            <option value="d">Mais recentes primeiro</option>
-            <option value="s">Maior score primeiro</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Banner de Metodologia -->
-      <div class="sidebar-banner">
-        <span class="sidebar-banner-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-          Filtro Determinístico
-        </span>
-        <span class="sidebar-banner-desc">
-          O score (0 a 10) é calculado por regras e dicionário semântico sem inteligência artificial generativa.
-        </span>
-      </div>
-    </aside>
-
-    <!-- COLUNA PRINCIPAL -->
-    <div class="feed-column">
-      
-      <!-- CABEÇALHO DO FEED -->
-      <div class="feed-bar">
-        <div class="feed-title-wrap">
-          <h1 class="feed-title">Oportunidades</h1>
-          <span class="feed-counter" id="count">Carregando vagas...</span>
-        </div>
-        
-        <div class="feed-actions">
-          <button type="button" class="btn-analytics-toggle" id="btn-toggle-analytics">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
-            <span id="analytics-toggle-text">Ver Gráficos</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- PAINEL DE ANALYTICS (COLAPSÁVEL) -->
-      <div class="analytics-drawer" id="analytics-drawer">
-        <div class="chart-box">
-          <h4>Distribuição por Score</h4>
-          <p>Frequência de vagas por pontuação de relevância (0 a 10)</p>
-          <svg id="c-score" role="img" aria-label="Distribuição de vagas por score"></svg>
-        </div>
-        <div class="chart-box">
-          <h4>Vagas por Fonte</h4>
-          <p>Volume total de posições mapeadas por provider</p>
-          <svg id="c-prov" role="img" aria-label="Vagas por fonte"></svg>
-        </div>
-      </div>
-
-      <!-- GRID DE CARDS -->
-      <ul class="job-grid" id="feed"></ul>
-
-      <!-- LOAD MORE -->
-      <div class="load-more-wrap" id="more"></div>
+  <div class="charts">
+    <div class="panel">
+      <h2>Vagas por score</h2>
+      <p>A linha marca o corte de 7, acima do qual a vaga vira alerta na hora.</p>
+      <svg id="c-score" role="img" aria-label="Distribuição de vagas por score"></svg>
     </div>
-
+    <div class="panel">
+      <h2>Vagas por fonte</h2>
+      <p>Quanto cada provider trouxe para o histórico.</p>
+      <svg id="c-prov" role="img" aria-label="Vagas por fonte"></svg>
+    </div>
   </div>
-</main>
 
-<footer>
-  <div class="footer-wrap">
-    <span id="foot-desc">Radar de Vagas — Varredura automatizada com envio no Telegram.</span>
-    <span id="foot-meta">Dados atualizados via GitHub Actions.</span>
+  <div class="filters">
+    <div class="frow">
+      <div class="flabel"><span>Situação no Telegram</span><em>escolha uma</em></div>
+      <div class="chips" id="g-st" role="group" aria-label="Situação no Telegram"></div>
+    </div>
+    <div class="frow">
+      <div class="flabel">
+        <span>Senioridade</span>
+        <em>pode marcar várias; vagas sem senioridade declarada aparecem em qualquer seleção</em>
+      </div>
+      <div class="chips" id="g-sn" role="group" aria-label="Senioridade"></div>
+    </div>
+    <div class="frow">
+      <div class="flabel"><span>Modelo de trabalho</span><em>pode marcar vários</em></div>
+      <div class="chips" id="g-w" role="group" aria-label="Modelo de trabalho"></div>
+    </div>
+    <div class="frow">
+      <div class="flabel"><span>Fonte</span><em>pode marcar várias</em></div>
+      <div class="chips" id="g-p" role="group" aria-label="Fonte"></div>
+    </div>
+    <div class="frow">
+      <div class="flabel"><span>Perfil da busca</span><em>pode marcar vários</em></div>
+      <div class="chips" id="g-pf" role="group" aria-label="Perfil da busca"></div>
+    </div>
+    <div class="inline">
+      <div class="fld grow">
+        <label for="q">Cargo ou empresa</label>
+        <input type="search" id="q" placeholder="ex.: engenheiro de dados, CI&amp;T" autocomplete="off">
+      </div>
+      <div class="fld">
+        <label for="f-s">Score mínimo</label>
+        <div class="rng"><input type="range" id="f-s" min="0" max="10" step="1" value="0"><output id="f-s-out">0</output></div>
+      </div>
+      <div class="fld">
+        <label for="f-o">Ordem</label>
+        <select id="f-o">
+          <option value="d">Mais recentes</option>
+          <option value="s">Maior score</option>
+          <option value="e">Empresa (A–Z)</option>
+        </select>
+      </div>
+      <button class="ghost" id="reset" type="button">Limpar filtros</button>
+    </div>
   </div>
-</footer>
+
+  <div class="resbar">
+    <span class="cnt" id="cnt"></span>
+    <span class="pp">
+      <label for="f-pp">Por página</label>
+      <select id="f-pp"><option>25</option><option selected>50</option><option>100</option><option>200</option></select>
+    </span>
+  </div>
+
+  <ol class="feed" id="feed"></ol>
+  <nav class="pager" id="pager" aria-label="Paginação"></nav>
+
+  <footer>
+    <span>Score e situação vêm do filtro de relevância do monitor — esta página só mostra.</span>
+    <span id="foot-meta"></span>
+  </footer>
+</div>
 
 <script>
 (() => {
   "use strict";
-  const LOTE = 48;
   const $ = (s) => document.querySelector(s);
-  const $$ = (s) => document.querySelectorAll(s);
-  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (ch) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
-
-  const ROTULO_ST = { sent: "Alerta imediato", digest: "No digest", skipped: "Não notificada", pending: "Pendente" };
-  const ROTULO_W = { remote: "Remoto", hybrid: "Híbrido", onsite: "Presencial", unknown: "Não informado" };
-  const ROTULO_SN = { estagio: "Estágio", junior: "Júnior", pleno: "Pleno", senior: "Sênior", lead: "Lead", indefinido: "" };
-
-  let dados = null, filtradas = [], mostrando = 0;
-
+  const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const nf = new Intl.NumberFormat("pt-BR");
-  const fmtData = (iso) => {
-    const d = new Date(iso);
-    return Number.isNaN(+d) ? "" : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+
+  const ROT_ST = { sent: "Alerta imediato", digest: "No digest", skipped: "Não notificada", pending: "Pendente" };
+  const ROT_W = { remote: "Remoto", hybrid: "Híbrido", onsite: "Presencial", unknown: "Não informado" };
+  const ROT_SN = { estagio: "Estágio", junior: "Júnior", pleno: "Pleno", senior: "Sênior", lead: "Lead", indefinido: "Sem senioridade" };
+  const SITUACOES = [
+    ["notificadas", "Notificadas"], ["sent", "Alerta imediato"], ["digest", "No digest"],
+    ["skipped", "Não notificadas"], ["", "Todas"],
+  ];
+  // Senioridade não declarada: aparece em qualquer seleção, porque a vaga pode
+  // muito bem ser do nível procurado — o monitor só não conseguiu inferir.
+  const SEM_NIVEL = ["", "indefinido"];
+
+  let dados = null, filtradas = [], pagina = 1;
+  const estado = {
+    st: "notificadas", q: "", s: 0, o: "d", pp: 50,
+    sn: new Set(), w: new Set(), p: new Set(), pf: new Set(),
   };
 
-  /* ---------- TEMA CLARO / ESCURO ---------- */
-  const savedTheme = localStorage.getItem("radar-theme") || "light";
-  document.documentElement.setAttribute("data-theme", savedTheme);
+  const LUA = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+  const SOL = '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
 
-  const btnTheme = $("#btn-theme");
-  if (btnTheme) {
-    btnTheme.addEventListener("click", () => {
-      const cur = document.documentElement.getAttribute("data-theme");
-      const next = cur === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", next);
-      localStorage.setItem("radar-theme", next);
-    });
+  function aplicarTema(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    $("#txt-tema").textContent = t === "dark" ? "Claro" : "Escuro";
+    $("#ico-tema").innerHTML = t === "dark" ? LUA : SOL;
+    try { localStorage.setItem("radar-tema", t); } catch (e) { /* navegação privada */ }
+    if (dados) desenharGraficos();
   }
+  let temaInicial = "dark";
+  try { temaInicial = localStorage.getItem("radar-tema") || "dark"; } catch (e) { /* ignora */ }
+  aplicarTema(temaInicial);
+  $("#btn-tema").addEventListener("click", () =>
+    aplicarTema(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"));
 
-  /* ---------- TOGGLE DE GRÁFICOS ---------- */
-  const btnAnalytics = $("#btn-toggle-analytics");
-  const drawerAnalytics = $("#analytics-drawer");
-  const textAnalytics = $("#analytics-toggle-text");
-  if (btnAnalytics && drawerAnalytics) {
-    btnAnalytics.addEventListener("click", () => {
-      drawerAnalytics.classList.toggle("open");
-      const isOpen = drawerAnalytics.classList.contains("open");
-      textAnalytics.textContent = isOpen ? "Ocultar Gráficos" : "Ver Gráficos";
-    });
-  }
+  /* Série única por gráfico: uma escala, sem legenda, rótulo direto só onde a
+     barra comporta. As cores saem dos tokens, então acompanham o tema. */
+  const cor = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
-  /* ---------- GRÁFICOS SVG MINIMALISTAS ---------- */
-  function barrasVerticais(svg, pares, limite) {
-    const W = 460, H = 180, ml = 34, mr = 8, mt = 14, mb = 26;
+  function graficoScore(svg, pares, corte) {
+    const W = 470, H = 186, ml = 36, mr = 10, mt = 20, mb = 28;
     const iw = W - ml - mr, ih = H - mt - mb;
-    const max = Math.max(...pares.map((p) => p[1]), 1);
+    let max = 1;
+    pares.forEach((p) => { if (p[1] > max) max = p[1]; });
     const bw = iw / pares.length;
     const y = (v) => mt + ih - (v / max) * ih;
-    const partes = [];
-
+    const alto = cor("--emerald"), baixo = cor("--bar-idle"), aviso = cor("--amber");
+    const out = [];
     for (let i = 0; i <= 2; i++) {
       const v = (max / 2) * i, yy = y(v);
-      partes.push(`<line x1="${ml}" y1="${yy.toFixed(1)}" x2="${W - mr}" y2="${yy.toFixed(1)}" stroke="var(--border)" stroke-width="1" stroke-dasharray="2 2"/>`);
-      partes.push(`<text x="${ml - 6}" y="${(yy + 3.5).toFixed(1)}" text-anchor="end" font-size="10" font-family="var(--font-mono)" fill="var(--text-subtle)">${nf.format(Math.round(v))}</text>`);
+      out.push('<line class="g-grid" x1="' + ml + '" y1="' + yy.toFixed(1) + '" x2="' + (W - mr) + '" y2="' + yy.toFixed(1) + '"/>');
+      out.push('<text class="g-tick" x="' + (ml - 8) + '" y="' + (yy + 3.6).toFixed(1) + '" text-anchor="end">' + nf.format(Math.round(v)) + '</text>');
     }
-
-    pares.forEach(([rot, val], i) => {
-      const sNum = Number(rot);
-      const x = ml + i * bw + bw * 0.18, w = bw * 0.64;
-      const alto = Math.max(ih - (y(val) - mt), val > 0 ? 3 : 0);
-      
-      let barColor = "var(--text-subtle)";
-      if (sNum >= 7) barColor = "var(--match-high)";
-      else if (sNum >= 5) barColor = "var(--match-mid)";
-
-      partes.push(`<rect x="${x.toFixed(1)}" y="${(mt + ih - alto).toFixed(1)}" width="${w.toFixed(1)}" height="${alto.toFixed(1)}" rx="3" fill="${barColor}" opacity="0.85">
-        <title>Score ${esc(rot)}: ${nf.format(val)} vagas</title>
-      </rect>`);
-
+    pares.forEach((par, i) => {
+      const rot = par[0], val = par[1];
+      const x = ml + i * bw + bw * 0.23, w = bw * 0.54;
+      const h = Math.max(ih - (y(val) - mt), val > 0 ? 3 : 0);
+      out.push('<rect class="g-bar" x="' + x.toFixed(1) + '" y="' + (mt + ih - h).toFixed(1) + '" width="' + w.toFixed(1)
+        + '" height="' + h.toFixed(1) + '" rx="4" fill="' + (Number(rot) >= corte ? alto : baixo) + '">'
+        + '<title>Score ' + rot + ': ' + nf.format(val) + ' vagas</title></rect>');
       if (val / max > 0.14) {
-        partes.push(`<text x="${(x + w / 2).toFixed(1)}" y="${(mt + ih - alto - 5).toFixed(1)}" text-anchor="middle" font-size="10.5" font-family="var(--font-mono)" font-weight="600" fill="var(--text-primary)">${nf.format(val)}</text>`);
+        out.push('<text class="g-val" x="' + (x + w / 2).toFixed(1) + '" y="' + (mt + ih - h - 6).toFixed(1) + '" text-anchor="middle">' + nf.format(val) + '</text>');
       }
-      partes.push(`<text x="${(x + w / 2).toFixed(1)}" y="${H - mb + 14}" text-anchor="middle" font-size="10" font-family="var(--font-mono)" fill="var(--text-muted)">${esc(rot)}</text>`);
+      out.push('<text class="g-tick" x="' + (x + w / 2).toFixed(1) + '" y="' + (H - mb + 15) + '" text-anchor="middle">' + rot + '</text>');
     });
-
-    const xr = ml + (limite - Number(pares[0][0])) * bw;
-    partes.push(`<line x1="${xr.toFixed(1)}" y1="${mt - 4}" x2="${xr.toFixed(1)}" y2="${mt + ih}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 3"/>`);
-    partes.push(`<text x="${(xr + 4).toFixed(1)}" y="${mt + 6}" font-size="10" font-family="var(--font-mono)" font-weight="700" fill="#ef4444">≥ ${limite}</text>`);
-
-    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-    svg.innerHTML = partes.join("");
+    const xc = ml + corte * bw;
+    out.push('<line x1="' + xc.toFixed(1) + '" y1="' + (mt - 8) + '" x2="' + xc.toFixed(1) + '" y2="' + (mt + ih) + '" stroke="' + aviso + '" stroke-width="1.5" stroke-dasharray="4 3"/>');
+    out.push('<text class="g-tick" x="' + (xc + 6).toFixed(1) + '" y="' + (mt - 2) + '" fill="' + aviso + '">corte ' + corte + '</text>');
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.innerHTML = out.join("");
   }
 
-  function barrasHorizontais(svg, pares) {
-    const W = 460, fila = 28, mt = 8, ml = 110, mr = 44;
-    const H = mt + pares.length * fila;
+  function graficoFonte(svg, pares) {
+    const W = 470, linha = 27, mt = 4, ml = 118, mr = 52;
+    const H = mt + pares.length * linha;
     const iw = W - ml - mr;
-    const max = Math.max(...pares.map((p) => p[1]), 1);
-    const partes = [];
-
-    pares.forEach(([rot, val], i) => {
-      const y = mt + i * fila, w = Math.max((val / max) * iw, 3);
-      partes.push(`<text x="${ml - 10}" y="${y + 14}" text-anchor="end" font-size="12" font-family="var(--font-body)" font-weight="500" fill="var(--text-secondary)">${esc(rot)}</text>`);
-      partes.push(`<rect x="${ml}" y="${y + 4}" width="${w.toFixed(1)}" height="13" rx="3" fill="var(--accent-primary)" opacity="0.8">
-        <title>${esc(rot)}: ${nf.format(val)} vagas</title>
-      </rect>`);
-      partes.push(`<text x="${(ml + w + 8).toFixed(1)}" y="${y + 15}" font-size="10.5" font-family="var(--font-mono)" font-weight="600" fill="var(--text-primary)">${nf.format(val)}</text>`);
+    let max = 1;
+    pares.forEach((p) => { if (p[1] > max) max = p[1]; });
+    const base = cor("--cyan");
+    const out = [];
+    pares.forEach((par, i) => {
+      const rot = par[0], val = par[1];
+      const y = mt + i * linha, w = Math.max((val / max) * iw, 3);
+      out.push('<text class="g-lab" x="' + (ml - 12) + '" y="' + (y + 13) + '" text-anchor="end">' + esc(rot) + '</text>');
+      out.push('<rect class="g-bar" x="' + ml + '" y="' + (y + 3) + '" width="' + w.toFixed(1) + '" height="13" rx="4" fill="' + base
+        + '" fill-opacity="' + (0.45 + 0.5 * (val / max)).toFixed(2) + '"><title>' + esc(rot) + ': ' + nf.format(val) + ' vagas</title></rect>');
+      out.push('<text class="g-val" x="' + (ml + w + 8).toFixed(1) + '" y="' + (y + 14) + '">' + nf.format(val) + '</text>');
     });
-
-    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-    svg.setAttribute("preserveAspectRatio", "xMidYMin meet");
-    svg.innerHTML = partes.join("");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.innerHTML = out.join("");
   }
 
-  /* ---------- CARD DE VAGA (TALENTLY / JOBSEEKER STYLE) ---------- */
-  function renderGauge(score) {
-    const radius = 15;
-    const circumference = 2 * Math.PI * radius;
-    const percent = Math.min(Math.max(score / 10, 0), 1);
-    const dashoffset = circumference * (1 - percent);
-
-    let strokeColor = "var(--match-low)";
-    let matchText = "Baixo Match";
-    if (score >= 9) {
-      strokeColor = "var(--match-high)";
-      matchText = "Match Alto";
-    } else if (score >= 7) {
-      strokeColor = "var(--match-high)";
-      matchText = "Match Alto";
-    } else if (score >= 5) {
-      strokeColor = "var(--match-mid)";
-      matchText = "Match Médio";
-    }
-
-    return `
-      <div class="match-gauge-wrap" title="Score de relevância: ${score}/10">
-        <div class="circular-gauge">
-          <svg viewBox="0 0 36 36">
-            <circle class="gauge-bg" cx="18" cy="18" r="${radius}"></circle>
-            <circle class="gauge-fill" cx="18" cy="18" r="${radius}" 
-                    stroke="${strokeColor}" 
-                    stroke-dasharray="${circumference.toFixed(1)}" 
-                    stroke-dashoffset="${dashoffset.toFixed(1)}"></circle>
-          </svg>
-          <span class="gauge-score-text">${score}</span>
-        </div>
-        <div class="match-info">
-          <span class="match-label">${score * 10}% Match</span>
-          <span class="match-sub">${matchText}</span>
-        </div>
-      </div>
-    `;
+  function desenharGraficos() {
+    const ag = dados.agregados;
+    const scores = [];
+    for (let s = 0; s <= 10; s++) scores.push([String(s), ag.score[String(s)] || 0]);
+    graficoScore($("#c-score"), scores, 7);
+    graficoFonte($("#c-prov"), Object.entries(ag.provider).sort((a, b) => b[1] - a[1]));
   }
 
-  function getStatusClass(st) {
-    if (st === "sent") return "status-sent";
-    if (st === "digest") return "status-digest";
-    return "status-skipped";
-  }
+  const classeScore = (s) => s >= 10 ? "sc-max" : s >= 7 ? "sc-hi" : s >= 5 ? "sc-mid" : "sc-low";
+  const rotuloScore = (s) => s >= 10 ? "máx" : s >= 7 ? "alta" : s >= 5 ? "média" : "baixa";
+  const fmtData = (iso) => {
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? "" : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  };
 
-  function linha(v) {
+  function cartao(v) {
     const st = v.st || "pending";
-    const sen = ROTULO_SN[v.sn] || "";
-    const wRotulo = ROTULO_W[v.w] || v.w;
-    const inicial = (v.e || "V").trim().charAt(0).toUpperCase();
-
-    const tagRemote = v.w === "remote" ? `<span class="pill-tag pill-tag-remote">Remoto</span>` : (wRotulo ? `<span class="pill-tag">${esc(wRotulo)}</span>` : "");
-    const tagSenioridade = sen ? `<span class="pill-tag">${esc(sen)}</span>` : "";
-    const tagProvider = v.p ? `<span class="pill-tag pill-tag-provider">${esc(v.p)}</span>` : "";
-
-    return `<li class="job-card">
-      <div class="card-top">
-        <div class="company-info">
-          <div class="company-avatar">${esc(inicial)}</div>
-          <div class="company-meta">
-            <span class="company-name" title="${esc(v.e)}">
-              ${esc(v.e)}
-              <svg class="verified-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-            </span>
-            <span class="job-date">${esc(fmtData(v.d))}</span>
-          </div>
-        </div>
-        <span class="status-pill ${getStatusClass(st)}">
-          ${esc(ROTULO_ST[st] || st)}
-        </span>
-      </div>
-
-      <div class="card-body">
-        <a href="${esc(v.u)}" target="_blank" rel="noopener noreferrer" class="job-title" title="${esc(v.t)}">
-          ${esc(v.t)}
-        </a>
-
-        <div class="card-tags">
-          ${v.l ? `<span class="pill-tag">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
-            ${esc(v.l)}
-          </span>` : ""}
-          ${tagRemote}
-          ${tagSenioridade}
-          ${tagProvider}
-        </div>
-      </div>
-
-      <div class="card-bottom">
-        ${renderGauge(v.s)}
-        <a href="${esc(v.u)}" target="_blank" rel="noopener noreferrer" class="btn-apply">
-          Ver vaga
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="7" y1="17" x2="17" y2="7"></line>
-            <polyline points="7 7 17 7 17 17"></polyline>
-          </svg>
-        </a>
-      </div>
-    </li>`;
+    const semNivel = SEM_NIVEL.indexOf(v.sn || "") !== -1;
+    const chips = [
+      '<span class="chip">' + esc(ROT_W[v.w] || v.w) + '</span>',
+      semNivel ? '<span class="chip nd">sem senioridade</span>' : '<span class="chip">' + esc(ROT_SN[v.sn] || v.sn) + '</span>',
+      v.c ? '<span class="chip">' + esc(v.c) + '</span>' : "",
+    ].join("");
+    return '<li class="job">'
+      + '<div class="sc ' + classeScore(v.s) + '"><b>' + v.s + '</b><i>' + rotuloScore(v.s) + '</i></div>'
+      + '<div class="jmain"><p class="jtitle"><a href="' + esc(v.u) + '" target="_blank" rel="noopener noreferrer">'
+      + esc(v.t) + '</a></p><div class="jmeta"><span class="co">' + esc(v.e) + '</span>'
+      + (v.l ? '<span>' + esc(v.l) + '</span>' : "")
+      + '<span class="chip">' + esc(v.p) + '</span>' + chips + '</div></div>'
+      + '<div class="jside"><span class="st st-' + esc(st) + '"><span class="d"></span>'
+      + esc(ROT_ST[st] || st) + '</span><span class="when">' + esc(fmtData(v.d)) + '</span></div></li>';
   }
 
-  /* ---------- FILTRAGEM E APLICAÇÃO ---------- */
-  function getSituacaoSelecionada() {
-    const checked = document.querySelector('input[name="st-radio"]:checked');
-    return checked ? checked.value : "notificadas";
+  /* Só a página corrente vai para o DOM. Com milhares de vagas é a diferença
+     entre a página responder na hora e engasgar a cada filtro. */
+  function paginar() {
+    const pp = estado.pp, total = filtradas.length;
+    const paginas = Math.max(1, Math.ceil(total / pp));
+    pagina = Math.min(Math.max(1, pagina), paginas);
+    const ini = (pagina - 1) * pp;
+    const fatia = filtradas.slice(ini, ini + pp);
+
+    $("#feed").innerHTML = fatia.length ? fatia.map(cartao).join("")
+      : '<li class="empty">Nenhuma vaga com esses filtros. Baixe o score mínimo ou escolha <b>Todas</b> na situação.</li>';
+    $("#cnt").innerHTML = total
+      ? '<b>' + nf.format(ini + 1) + '–' + nf.format(ini + fatia.length) + '</b> de <b>'
+        + nf.format(total) + '</b> ' + (total === 1 ? "vaga" : "vagas")
+      : "Nenhuma vaga no filtro atual";
+
+    const p = $("#pager");
+    if (paginas <= 1) { p.innerHTML = ""; return; }
+    const nums = [1];
+    if (pagina > 3) nums.push("…");
+    for (let n = Math.max(2, pagina - 1); n <= Math.min(paginas - 1, pagina + 1); n++) nums.push(n);
+    if (pagina < paginas - 2) nums.push("…");
+    if (paginas > 1) nums.push(paginas);
+    p.innerHTML = '<button type="button" data-ir="' + (pagina - 1) + '"' + (pagina === 1 ? " disabled" : "") + ' aria-label="Página anterior">‹</button>'
+      + nums.map((n) => n === "…" ? '<span class="gap">…</span>'
+        : '<button type="button" data-ir="' + n + '"' + (n === pagina ? ' aria-current="page"' : "") + '>' + n + '</button>').join("")
+      + '<button type="button" data-ir="' + (pagina + 1) + '"' + (pagina === paginas ? " disabled" : "") + ' aria-label="Próxima página">›</button>';
   }
 
   function aplicar() {
-    const q = $("#q").value.trim().toLowerCase();
-    const st = getSituacaoSelecionada();
-    const prov = $("#f-p").value;
-    const pf = $("#f-pf").value;
-    const w = $("#f-w").value;
-    const smin = Number($("#f-s").value);
-    const ordem = $("#f-o").value;
-
+    pagina = 1;
+    const e = estado;
     filtradas = dados.vagas.filter((v) => {
-      if (st === "notificadas") {
-        if (v.st !== "sent" && v.st !== "digest") return false;
-      } else if (st && v.st !== st) {
-        return false;
-      }
-      if (prov && v.p !== prov) return false;
-      if (pf && v.pf !== pf) return false;
-      if (w && v.w !== w) return false;
-      if (v.s < smin) return false;
-      if (q && !(v.t.toLowerCase().includes(q) || v.e.toLowerCase().includes(q))) return false;
+      if (e.st === "notificadas") { if (v.st !== "sent" && v.st !== "digest") return false; }
+      else if (e.st && v.st !== e.st) return false;
+      if (e.p.size && !e.p.has(v.p)) return false;
+      if (e.pf.size && !e.pf.has(v.pf)) return false;
+      if (e.w.size && !e.w.has(v.w)) return false;
+      // Sem senioridade declarada passa em qualquer seleção de nível.
+      if (e.sn.size && !e.sn.has(v.sn) && SEM_NIVEL.indexOf(v.sn || "") === -1) return false;
+      if (v.s < e.s) return false;
+      if (e.q && v._b.indexOf(e.q) === -1) return false;
       return true;
     });
-
-    if (ordem === "s") {
-      filtradas.sort((a, b) => b.s - a.s || (a.d < b.d ? 1 : -1));
-    }
-
-    mostrando = 0;
-    $("#feed").innerHTML = "";
-
-    if (filtradas.length) {
-      $("#count").textContent = `${nf.format(filtradas.length)} ${filtradas.length === 1 ? "vaga encontrada" : "vagas encontradas"}`;
-    } else {
-      $("#count").textContent = "0 vagas";
-    }
-
-    if (!filtradas.length) {
-      $("#feed").innerHTML = `
-        <li class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            <line x1="8" y1="11" x2="14" y2="11"></line>
-          </svg>
-          <h3>Nenhuma oportunidade encontrada</h3>
-          <p>Tente diminuir a nota de corte ou limpar os filtros de busca para visualizar mais vagas.</p>
-          <button type="button" class="btn-clear-filters" id="empty-clear" style="font-size: 14px; text-decoration: underline;">Redefinir todos os filtros</button>
-        </li>
-      `;
-      $("#more").innerHTML = "";
-      const ec = $("#empty-clear");
-      if (ec) ec.addEventListener("click", resetar);
-      return;
-    }
-
-    mais();
+    if (e.o === "s") filtradas.sort((a, b) => b.s - a.s || (a.d < b.d ? 1 : -1));
+    else if (e.o === "e") filtradas.sort((a, b) => a.e.localeCompare(b.e, "pt-BR") || b.s - a.s);
+    paginar();
   }
 
-  function mais() {
-    const fatia = filtradas.slice(mostrando, mostrando + LOTE);
-    $("#feed").insertAdjacentHTML("beforeend", fatia.map(linha).join(""));
-    mostrando += fatia.length;
-    const resta = filtradas.length - mostrando;
-    $("#more").innerHTML = resta > 0
-      ? `<button class="btn-load-more" id="btn-more" type="button">
-          Carregar mais ${nf.format(Math.min(resta, LOTE))} de ${nf.format(resta)} vagas
-        </button>`
-      : "";
-    const b = $("#btn-more");
-    if (b) b.addEventListener("click", mais);
+  /* Grupo de chips com seleção múltipla, guardada num Set. */
+  function grupoMulti(el, contagem, rotulos, conjunto) {
+    const itens = Object.entries(contagem).filter((kv) => kv[0]).sort((a, b) => b[1] - a[1]);
+    el.innerHTML = itens.map((kv) =>
+      '<button type="button" data-v="' + esc(kv[0]) + '" aria-pressed="false">'
+      + esc((rotulos && rotulos[kv[0]]) || kv[0]) + '<span class="n">' + nf.format(kv[1]) + '</span></button>').join("");
+    el.addEventListener("click", (ev) => {
+      const b = ev.target.closest("button[data-v]"); if (!b) return;
+      const v = b.dataset.v;
+      if (conjunto.has(v)) { conjunto.delete(v); b.setAttribute("aria-pressed", "false"); }
+      else { conjunto.add(v); b.setAttribute("aria-pressed", "true"); }
+      aplicar();
+    });
   }
 
-  function resetar() {
-    $("#q").value = "";
-    $("#f-p").value = "";
-    $("#f-pf").value = "";
-    $("#f-w").value = "";
-    $("#f-s").value = "0";
-    $("#f-s-out").textContent = "0 / 10";
-    $("#f-o").value = "d";
+  const contar = (chave) => dados.vagas.reduce((acc, v) => {
+    const k = v[chave] || "indefinido";
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {});
 
-    const radNotif = document.querySelector('input[name="st-radio"][value="notificadas"]');
-    if (radNotif) radNotif.checked = true;
-
-    $$("#filter-st-options .custom-checkbox-label").forEach((el) => el.classList.remove("active"));
-    if (radNotif && radNotif.closest(".custom-checkbox-label")) {
-      radNotif.closest(".custom-checkbox-label").classList.add("active");
-    }
-
-    aplicar();
-  }
-
-  function preencherOpcoes(sel, mapa, rotulos) {
-    const itens = Object.entries(mapa).sort((a, b) => b[1] - a[1]);
-    sel.insertAdjacentHTML("beforeend", itens
-      .map(([k, n]) => `<option value="${esc(k)}">${esc((rotulos && rotulos[k]) || k)} (${nf.format(n)})</option>`)
-      .join(""));
-  }
-
-  /* ---------- MONTAGEM PRINCIPAL ---------- */
   function montar() {
+    // Campo de busca pré-normalizado: evita refazer toLowerCase em milhares de
+    // itens a cada tecla digitada.
+    dados.vagas.forEach((v) => { v._b = (v.t + " " + v.e).toLowerCase(); });
+
     const ag = dados.agregados;
+    let alto = 0;
+    Object.keys(ag.score).forEach((s) => { if (Number(s) >= 7) alto += ag.score[s]; });
 
-    // Header Stats
-    $("#nav-notificadas").textContent = nf.format(dados.notificadas);
-    $("#nav-total").textContent = nf.format(dados.total);
+    $("#s-total").textContent = nf.format(dados.total);
+    $("#s-notif").textContent = nf.format(dados.notificadas);
+    $("#lede").innerHTML = "Cada vaga que o monitor coletou e o que ele fez com ela. <b>"
+      + nf.format(dados.notificadas) + "</b> das <b>" + nf.format(dados.total)
+      + "</b> chegaram no seu Telegram; as demais não passaram nos filtros do perfil.";
 
-    // Badges de situação na sidebar
-    const totalNotif = dados.notificadas;
-    const totalSent = ag.status.sent || 0;
-    const totalDigest = ag.status.digest || 0;
-    const totalAll = dados.total;
+    $("#tiles").innerHTML = [
+      ["No histórico", nf.format(dados.total), "vagas", ""],
+      ["Notificadas", nf.format(dados.notificadas), "", "t-em"],
+      ["Score ≥ 7", nf.format(alto), "alerta na hora", "t-em"],
+      ["No digest", nf.format(ag.status.digest || 0), "às 20h", "t-cy"],
+      ["Não notificadas", nf.format(ag.status.skipped || 0), "", "t-am"],
+      ["Fontes", String(Object.keys(ag.provider).length), "providers", ""],
+    ].map((t) => '<div class="tile ' + t[3] + '"><dt>' + t[0] + "</dt><dd>" + t[1]
+      + (t[2] ? "<em>" + t[2] + "</em>" : "") + "</dd></div>").join("");
 
-    $("#badge-st-notificadas").textContent = nf.format(totalNotif);
-    $("#badge-st-sent").textContent = nf.format(totalSent);
-    $("#badge-st-digest").textContent = nf.format(totalDigest);
-    $("#badge-st-all").textContent = nf.format(totalAll);
+    desenharGraficos();
 
-    // Gráficos
-    const scores = [];
-    for (let s = 0; s <= 10; s++) scores.push([String(s), ag.score[String(s)] || 0]);
-    barrasVerticais($("#c-score"), scores, 7);
-    barrasHorizontais($("#c-prov"), Object.entries(ag.provider).sort((a, b) => b[1] - a[1]));
-
-    // Selects
-    preencherOpcoes($("#f-p"), ag.provider);
-    preencherOpcoes($("#f-pf"), ag.perfil);
-
-    const porW = {};
-    dados.vagas.forEach((v) => { porW[v.w] = (porW[v.w] || 0) + 1; });
-    preencherOpcoes($("#f-w"), porW, ROTULO_W);
-
-    // Footer
-    const g = new Date(dados.gerado_em);
-    $("#foot-meta").textContent = `Atualizado em ${Number.isNaN(+g) ? esc(dados.gerado_em) : g.toLocaleString("pt-BR")}`;
-
-    // Eventos
-    $("#q").addEventListener("input", aplicar);
-    $("#f-p").addEventListener("change", aplicar);
-    $("#f-pf").addEventListener("change", aplicar);
-    $("#f-w").addEventListener("change", aplicar);
-    $("#f-o").addEventListener("change", aplicar);
-    $("#btn-search-trigger").addEventListener("click", aplicar);
-
-    $("#f-s").addEventListener("input", (e) => {
-      $("#f-s-out").textContent = `${e.target.value} / 10`;
+    const cont = Object.assign({}, ag.status, { notificadas: dados.notificadas, "": dados.total });
+    $("#g-st").innerHTML = SITUACOES.map((s) =>
+      '<button type="button" data-st="' + s[0] + '" aria-pressed="' + (s[0] === estado.st) + '">'
+      + s[1] + '<span class="n">' + nf.format(cont[s[0]] || 0) + "</span></button>").join("");
+    $("#g-st").addEventListener("click", (ev) => {
+      const b = ev.target.closest("button[data-st]"); if (!b) return;
+      estado.st = b.dataset.st;
+      $("#g-st").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
       aplicar();
     });
 
-    // Radio de situação com visual active
-    $$('input[name="st-radio"]').forEach((radio) => {
-      radio.addEventListener("change", (e) => {
-        $$("#filter-st-options .custom-checkbox-label").forEach((el) => el.classList.remove("active"));
-        if (e.target.closest(".custom-checkbox-label")) {
-          e.target.closest(".custom-checkbox-label").classList.add("active");
-        }
-        aplicar();
-      });
-    });
+    grupoMulti($("#g-sn"), contar("sn"), ROT_SN, estado.sn);
+    grupoMulti($("#g-w"), contar("w"), ROT_W, estado.w);
+    grupoMulti($("#g-p"), ag.provider, null, estado.p);
+    grupoMulti($("#g-pf"), ag.perfil, null, estado.pf);
 
-    $("#reset").addEventListener("click", resetar);
+    const g = new Date(dados.gerado_em);
+    $("#foot-meta").innerHTML = "Gerado de <code>data/jobs.json</code> em "
+      + (isNaN(g.getTime()) ? esc(dados.gerado_em) : g.toLocaleString("pt-BR"));
+
+    let deb = null;
+    $("#q").addEventListener("input", (ev) => {
+      const val = ev.target.value.trim().toLowerCase();
+      clearTimeout(deb);
+      deb = setTimeout(() => { estado.q = val; aplicar(); }, 140);
+    });
+    $("#f-o").addEventListener("change", (ev) => { estado.o = ev.target.value; aplicar(); });
+    $("#f-pp").addEventListener("change", (ev) => { estado.pp = Number(ev.target.value); aplicar(); });
+    $("#f-s").addEventListener("input", (ev) => {
+      estado.s = Number(ev.target.value); $("#f-s-out").value = ev.target.value; aplicar();
+    });
+    $("#pager").addEventListener("click", (ev) => {
+      const b = ev.target.closest("button[data-ir]"); if (!b || b.disabled) return;
+      pagina = Number(b.dataset.ir);
+      paginar();
+      $(".resbar").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    $("#reset").addEventListener("click", () => {
+      estado.st = "notificadas"; estado.q = ""; estado.s = 0; estado.o = "d";
+      [estado.sn, estado.w, estado.p, estado.pf].forEach((c) => c.clear());
+      $("#q").value = ""; $("#f-o").value = "d"; $("#f-s").value = "0"; $("#f-s-out").value = "0";
+      document.querySelectorAll(".chips button[data-v]").forEach((x) => x.setAttribute("aria-pressed", "false"));
+      $("#g-st").querySelectorAll("button").forEach((x) =>
+        x.setAttribute("aria-pressed", String(x.dataset.st === "notificadas")));
+      aplicar();
+    });
 
     aplicar();
   }
 
   fetch("data.json", { cache: "no-cache" })
-    .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then((json) => { dados = json; montar(); })
     .catch((err) => {
-      $("#count").textContent = "Erro ao carregar data.json — " + err.message;
+      $("#lede").textContent = "Não consegui carregar o data.json — " + err.message
+        + ". Ele é gerado pelo GitHub Actions a cada execução do monitor.";
     });
 })();
 </script>
