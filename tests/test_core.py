@@ -109,7 +109,9 @@ def test_classify_title_levels():
     assert classify_title("Coordenador de Tecnologia").level == CONF_MEDIA
     # ferramenta sozinha não passa; com cargo junto, passa
     assert classify_title("Power BI").passes is False
-    assert classify_title("Analista de Power BI").level in (CONF_MEDIA, CONF_BAIXA)
+    # "Analista de BI" sempre foi ALTA; acrescentar "Power" ao título não pode
+    # rebaixar a confiança, que era o que a regra antiga fazia.
+    assert classify_title("Analista de Power BI").level == CONF_ALTA
     # cargo não-tech é rejeitado
     assert classify_title("Analista Financeiro").passes is False
     assert classify_title("Engenheiro de Manutenção HVAC").passes is False
@@ -540,3 +542,45 @@ def test_dev_nao_casa_dentro_de_development():
     assert classify_title("Dev .NET SR").passes
     assert not classify_title("Business Development Representative").passes
     assert not classify_title("Development Manager - Comercial").passes
+
+
+def test_variantes_do_mesmo_cargo_caem_no_mesmo_nivel():
+    """A equivalência é regra, não lista: mesma função, mesmo nível."""
+    equivalentes = [
+        ("Tech Lead", "Tech Leader"),
+        ("Engenheiro de Banco de Dados", "ADMINISTRADOR BANCO DADOS SR"),
+        ("Desenvolvedor Java", "Desenvolvedora Java"),
+        ("Cientista de Dados", "CIENTISTA DADOS SR"),
+        ("Ingeniero de Datos", "Ingeniera de Datos"),
+        ("Arquiteto de Soluções", "Pessoa Arquiteta de Soluções e Software"),
+        ("Analista de Sistemas", "Analista Sistemas"),
+    ]
+    for a, b in equivalentes:
+        assert classify_title(a).level == classify_title(b).level, f"{a} != {b}"
+
+
+def test_canon_ignora_conectivos():
+    """'de/da/do' não mudam o cargo, então não podem mudar a comparação."""
+    from src.relevance import canon
+    assert canon("Engenheiro de Banco de Dados") == "engenheiro banco dados"
+    assert canon("ADMINISTRADOR  BANCO   DADOS") == "administrador banco dados"
+    assert canon("Analista de Dados") == canon("Analista Dados")
+
+
+def test_sufixo_curinga_cobre_genero_e_plural():
+    """'desenvolvedor*' resolve o que exigia uma entrada por variação."""
+    for t in ["Desenvolvedor Python", "Desenvolvedora Python",
+              "Desenvolvedores Python", "Engenheira de Dados"]:
+        assert classify_title(t).passes, t
+
+
+def test_cargo_forte_vence_contexto_de_outra_area():
+    """Vaga de tech dentro de outra área do negócio continua sendo de tech."""
+    assert classify_title("Dev Backend Java Pleno - Segmento Financeiro").passes
+    assert classify_title("Data Analyst Pleno - Marketing").passes
+    assert classify_title("Pessoa Desenvolvedora Fullstack (Venda Direta)").passes
+    assert classify_title("Analista de People Analytics II").passes
+    # já sem cargo forte, o contexto veta
+    assert not classify_title("Consultor de Vendas de Software").passes
+    assert not classify_title("Coordenador de Desenvolvimento Comercial").passes
+    assert not classify_title("Analista Recursos Humanos III").passes

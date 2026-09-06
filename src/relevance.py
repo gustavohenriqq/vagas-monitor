@@ -145,31 +145,112 @@ TOOLS = [
     "laravel", "django", "spring boot", "quarkus", "camel",
 ]
 
-# Palavras genéricas de cargo, usadas para validar uma ferramenta.
-ROLE_WORDS = [
-    "desenvolvedor", "desenvolvedora", "developer", "programador", "engenheiro",
-    "engenheira", "analista", "cientista", "arquiteto", "especialista",
-    "consultor", "consultora", "estagiario", "estagio", "trainee", "engineer",
-    "analyst", "developer", "administrador", "lider", "coordenador", "tech lead",
-    "dev", "testador", "engineer", "scientist", "architect",
-    # espanhol
-    "desarrollador", "ingeniero", "ingeniera", "arquitecto", "cientifico",
-    "practicante", "pasante",
-]
+# (ROLE_WORDS foi absorvida por ROLE_NOUNS, mais abaixo: mesma ideia, com
+# curinga de gênero/plural e os termos em espanhol.)
 
 
-@lru_cache(maxsize=4096)
-def _term_re(term_norm: str) -> "re.Pattern":
-    return re.compile(r"(?<![0-9a-z])" + re.escape(term_norm) + r"(?![0-9a-z])")
+# Conectivos: só ligam palavras, não mudam o cargo. Removê-los faz
+# "engenheiro de banco de dados" e "engenheiro banco dados" virarem o mesmo
+# texto, em vez de exigir uma entrada de vocabulário para cada grafia.
+_CONECTIVOS = frozenset((
+    "de", "da", "do", "das", "dos", "del", "la", "el", "los", "las",
+    "of", "the", "in", "on", "for", "em", "no", "na", "nos", "nas",
+    "e", "y", "and", "com", "with", "para", "a", "o", "um", "uma",
+))
+_SEPARADOR = re.compile(r"[^0-9a-z#.+]+")
 
 
-def _present(terms: list[str], blob: str) -> bool:
-    return any(_term_re(normalize(t)).search(blob) for t in terms)
+@lru_cache(maxsize=8192)
+def canon(texto: str) -> str:
+    """Normaliza e joga fora conectivos, deixando só as palavras que carregam sentido."""
+    palavras = [p for p in _SEPARADOR.split(normalize(texto)) if p and p not in _CONECTIVOS]
+    return " ".join(palavras)
+
+
+@lru_cache(maxsize=8192)
+def _term_re(term_canon: str) -> "re.Pattern":
+    """Compila o termo. Sufixo '*' aceita continuação da palavra.
+
+    É assim que "tech lead*" cobre lead, leader e leads de uma vez, em vez de
+    uma entrada por variação — a fronteira de palavra sozinha tratava
+    "tech leader" como termo diferente de "tech lead".
+    """
+    if term_canon.endswith("*"):
+        corpo = re.escape(term_canon[:-1]) + "[a-z]*"
+    else:
+        corpo = re.escape(term_canon)
+    return re.compile("(?<![0-9a-z])" + corpo + "(?![0-9a-z])")
+
+
+def _present(terms, blob: str) -> bool:
+    """`blob` já deve vir de canon()."""
+    return any(_term_re(canon(t) if not t.endswith("*") else canon(t[:-1]) + "*").search(blob)
+               for t in terms)
 
 
 # ---------------------------------------------------------------------------
 # Filtro em 3 níveis
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Regra combinatória: núcleo de cargo + domínio de tech
+#
+# "Engenheiro de banco de dados", "administrador banco dados" e "arquiteto de
+# dados" são a mesma função escrita de três jeitos. Em vez de uma entrada de
+# vocabulário por grafia, o par (quem faz) × (sobre o quê) resolve todas.
+# O sufixo '*' cobre gênero e plural: desenvolvedor/a/es numa entrada só.
+# ---------------------------------------------------------------------------
+
+# Quem faz. São núcleos de cargo, não cargos completos.
+ROLE_NOUNS = [
+    "desenvolvedor*", "desenvolvimento", "developer*", "programador*",
+    "engenheiro*", "engenheira*", "engenharia", "engineer*",
+    "arquiteto*", "arquiteta*", "architect*", "arquitectura",
+    "analista*", "analyst*", "cientista*", "scientist*",
+    "administrador*", "administradora*", "especialista*", "specialist*",
+    "consultor*", "tecnico*", "technician", "coordenador*", "gestor*",
+    "gerente*", "manager*", "lider*", "lead*", "leader*", "head",
+    "estagiario*", "estagio", "trainee", "intern", "aprendiz",
+    # espanhol
+    "ingeniero*", "ingeniera*", "ingenieria", "desarrollador*", "desarrollo",
+    "cientifico*", "arquitecto*", "practicante*", "pasante*",
+]
+
+# Sobre o quê. Só entra domínio que, sozinho, já é inequivocamente de tech —
+# por isso "desenvolvimento" e "produto" ficam de fora: existem em vendas,
+# mercado e RH ("desenvolvimento de mercado", "desenvolvimento humano").
+TECH_DOMAINS = [
+    "software", "sistemas", "systems", "dados", "data", "datos",
+    "banco de dados", "base de datos", "database", "bi",
+    "business intelligence", "analytics", "machine learning", "ml",
+    "inteligencia artificial", "artificial intelligence", "ia", "ai",
+    "cloud", "nuvem", "nube", "devops", "sre", "infraestrutura",
+    "infraestructura", "infrastructure", "redes", "networks", "seguranca",
+    "seguridad", "security", "qa", "testes", "testing", "qualidade de software",
+    "backend", "back-end", "frontend", "front-end", "fullstack", "full stack",
+    "mobile", "android", "ios", "web", "api", "microservicos", "microservicios",
+    "computacao", "informatica", "tecnologia da informacao", "ti", "it",
+    "plataforma", "platform", "dbre", "etl", "big data",
+]
+
+# Trava de segurança: mesmo com cargo + domínio, estes contextos derrubam a
+# vaga. "Consultor de vendas de software" é vaga de vendas, não de tech.
+DENY_CONTEXT = [
+    "vendas", "venda", "comercial", "sales", "sdr", "pre-vendas", "pos-vendas",
+    "account executive", "customer success", "atendimento", "call center",
+    "recursos humanos", "recrutamento", "recruiter",
+    "contabil", "fiscal", "juridico", "advogado",
+    "midia", "publicidade", "trafego pago",
+    # "marketing", "growth", "people" e "financeiro" ficaram DE FORA de
+    # propósito: "Marketing Analytics", "People Analytics" e "Analista de
+    # Dados | Financeiro" são vagas de dados de verdade. Sem cargo nem
+    # domínio de tech, esses títulos já são reprovados pelas regras normais.
+    "enfermeiro*", "enfermagem", "medico*", "medica*", "psicologo*",
+    "professor*", "docente", "instrutor*", "monitoria",
+    "limpeza", "motorista", "entregador*", "seguranca patrimonial",
+    "mercado", "negocios", "business development",
+]
+
 
 @dataclass
 class Confidence:
@@ -185,17 +266,34 @@ def classify_title(title: str) -> Confidence:
     Avalia só o título (não a descrição), como o JobRadar: o título carrega o
     cargo e evita falsos positivos de menções soltas no corpo do anúncio.
     """
-    blob = normalize(title)
+    blob = canon(title)
 
+    # Cargo inequívoco vence o contexto: "Dev Backend — Segmento Financeiro" e
+    # "Data Analyst - Marketing" são vagas de tech dentro de outra área do
+    # negócio, não vagas daquela área.
     if _present(STRONG_ROLES, blob):
         return Confidence(True, CONF_ALTA, "cargo de tech inequívoco no título")
 
-    if _present(AMBIGUOUS_ROLES, blob) and _present(QUALIFIERS, blob):
+    # Daqui para baixo o sinal é fraco, então contexto de outra área veta:
+    # "Consultor de vendas de software" casaria cargo + domínio sem ser tech.
+    de_outra_area = _present(DENY_CONTEXT, blob)
+
+    # Núcleo de cargo + domínio de tech, em qualquer ordem e sem depender de
+    # conectivo: cobre "engenheiro de banco de dados" e "administrador banco
+    # dados" com a mesma regra, no mesmo nível.
+    if not de_outra_area and _present(ROLE_NOUNS, blob) and _present(TECH_DOMAINS, blob):
+        return Confidence(True, CONF_ALTA, "cargo + domínio de tech no título")
+
+    if not de_outra_area and _present(AMBIGUOUS_ROLES, blob) and _present(QUALIFIERS, blob):
         return Confidence(True, CONF_MEDIA, "cargo ambíguo + qualificador de tech")
 
-    if _present(TOOLS, blob) and _present(ROLE_WORDS, blob):
+    # ROLE_NOUNS no lugar de ROLE_WORDS: mesma ideia de "palavra de cargo", mas
+    # com curinga de gênero/plural e os termos em espanhol.
+    if not de_outra_area and _present(TOOLS, blob) and _present(ROLE_NOUNS, blob):
         return Confidence(True, CONF_BAIXA, "ferramenta + palavra de cargo")
 
+    if de_outra_area:
+        return Confidence(False, CONF_NENHUM, "título é de outra área")
     return Confidence(False, CONF_NENHUM, "sem cargo de tech claro no título")
 
 
