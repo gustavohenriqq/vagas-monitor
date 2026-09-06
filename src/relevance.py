@@ -64,6 +64,42 @@ STRONG_ROLES = [
     "tech lead", "engenheiro de plataforma", "platform engineer",
     "engenheiro de seguranca", "security engineer", "analista de seguranca da informacao",
     "engenheiro de dados", "engenheiro de machine learning",
+    # --- cargos que o filtro deixava passar batido ---
+    "analytics engineer", "engenheiro de analytics", "analista de analytics",
+    "business intelligence", "bi analyst", "bi developer",
+    "administrador de dados", "data steward", "engenheiro de qualidade de dados",
+    "testador de software", "testador", "testadora", "qa engineer",
+    "test engineer", "engenheiro de testes", "analista de qualidade de software",
+    "analista de infraestrutura", "engenheiro de redes", "network engineer",
+    "suporte tecnico", "analista de suporte",
+    # "dev" abreviado: ".NET DEV", "Dev Back Java". A fronteira de palavra
+    # impede que case dentro de "development", então "business development"
+    # continua de fora.
+    "dev", "devs",
+    # --- espanhol: LatAm entrou no radar com dlocal, kavak, veritran, lahaus ---
+    "desarrollador", "desarrolladora", "desarrollo de software",
+    "ingeniero de software", "ingeniera de software",
+    "ingeniero de datos", "ingeniera de datos",
+    "ingeniero de sistemas", "cientifico de datos", "cientifica de datos",
+    "arquitecto de software", "arquitecto de soluciones",
+    "analista de datos", "analista de sistemas",
+    "programador", "programadora",
+    # variantes que a fronteira de palavra deixava escapar: "tech lead" não
+    # casa em "tech leader", e "engenheiro de software" não casa em
+    # "engenharia de software".
+    "tech leader", "technical leader", "lider tecnico", "team lead",
+    "engenharia de software", "engenharia de computacao", "engenharia de dados",
+    "mobile engineer", "engenheiro mobile", "desenvolvedor mobile",
+    "mobile developer", "android developer", "ios developer",
+    "desenvolvedor android", "desenvolvedor ios",
+    # formas nominais: o vocabulário só tinha a do profissional
+    # ("cientista de dados"), não a da área ("ciencia de dados").
+    "ciencia de dados", "data science", "data engineering",
+    "engenharia de banco de dados", "database engineering",
+    "desenvolvimento de software", "software development",
+    "engenharia de qualidade", "quality engineering",
+    "data architect", "arquiteta de software", "arquiteta de solucoes",
+    "qualidade de software", "eng de software", "eng de dados",
 ]
 
 # Cargos ambíguos: só contam com um qualificador de tech junto.
@@ -72,6 +108,13 @@ AMBIGUOUS_ROLES = [
     "especialista", "coordenador", "coordenadora", "gerente", "assistente",
     "estagiario", "estagiaria", "estagio", "trainee", "jovem aprendiz",
     "engenheiro", "engenheira", "arquiteto", "lider", "coordenacao",
+    # espanhol
+    "ingeniero", "ingeniera", "arquitecto", "practicante", "pasante",
+    "asistente", "coordinador", "coordinadora", "gerente de",
+    # inglês genérico que aparece muito em board internacional
+    "associate", "specialist", "intern", "engineer", "leader",
+    "gestor", "gestora", "manager", "administrador", "administradora",
+    "cientista", "arquiteta", "scientist", "architect",
 ]
 
 # Qualificadores que "salvam" um cargo ambíguo (contexto tech/dados).
@@ -83,6 +126,11 @@ QUALIFIERS = [
     "inteligencia artificial", "ia", "infraestrutura", "banco de dados",
     "python", "java", "javascript", "typescript", ".net", "node",
     "qa", "teste", "automacao",
+    # espanhol
+    "datos", "seguridad", "nube", "informatica", "programacion",
+    "aprendizaje automatico", "desarrollo", "tecnologia de la informacion",
+    # plataformas: salvam cargo ambíguo ("Arquiteto ... Mobile", "Mobile Engineer")
+    "mobile", "android", "ios", "web", "api", "microservicos", "microservicios",
 ]
 
 # Ferramentas/stacks concretas: só contam com uma palavra de cargo junto.
@@ -92,6 +140,9 @@ TOOLS = [
     "aws", "azure", "gcp", "google cloud", "docker", "kubernetes", "terraform",
     "spark", "databricks", "hadoop", "airflow", "kafka", "snowflake",
     "tableau", "looker", "qlik", "excel avancado", "pandas", "scala",
+    "dbt", "bigquery", "redshift", "postgres", "postgresql", "mysql",
+    "mongodb", "elasticsearch", "kotlin", "swift", "rust", "flutter",
+    "laravel", "django", "spring boot", "quarkus", "camel",
 ]
 
 # Palavras genéricas de cargo, usadas para validar uma ferramenta.
@@ -100,6 +151,10 @@ ROLE_WORDS = [
     "engenheira", "analista", "cientista", "arquiteto", "especialista",
     "consultor", "consultora", "estagiario", "estagio", "trainee", "engineer",
     "analyst", "developer", "administrador", "lider", "coordenador", "tech lead",
+    "dev", "testador", "engineer", "scientist", "architect",
+    # espanhol
+    "desarrollador", "ingeniero", "ingeniera", "arquitecto", "cientifico",
+    "practicante", "pasante",
 ]
 
 
