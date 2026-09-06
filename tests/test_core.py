@@ -458,3 +458,32 @@ def test_exclude_locations_tem_prioridade_sobre_locations():
                         url="u", city="Belo Horizonte", country="Brasil", workplace_type=REMOTE)
     assert matches(fora, prof).matched is False
     assert matches(dentro, prof).matched is True
+
+
+def test_regiao_classifica_pelo_local():
+    """Região sai do local da vaga, não do perfil da busca que casou."""
+    from src.dashboard import regiao
+
+    assert regiao("Belo Horizonte", "MG", "Brasil") == "brasil"
+    assert regiao("", "", "BR") == "brasil"          # código de país
+    assert regiao("Remoto", "", "BR") == "brasil"
+    assert regiao("Bogotá", "", "CO") == "latam"
+    assert regiao("Santa Cruz", "", "Bolivia") == "latam"
+
+    # país de fora vence o genérico: "Remote - USA" não é vaga sem país
+    assert regiao("Remote - USA", "", "") == "outros"
+    assert regiao("Remote U.S.", "", "") == "outros"
+    assert regiao("San Francisco", "California", "") == "outros"
+    assert regiao("Asia", "", "SG") == "outros"
+
+    # sem país declarado fica num balde próprio: pode aceitar o Brasil
+    assert regiao("", "", "") == "sem_pais"
+    assert regiao("Remote", "", "") == "sem_pais"
+    assert regiao("Anywhere in the World", "", "") == "sem_pais"
+
+    # "us" não pode casar dentro de outra palavra
+    assert regiao("Belarus", "", "") == "outros"     # cai no default, não por "us"
+    from src.dashboard import _RE_EUA
+    from src.models import normalize
+    assert not _RE_EUA.search(normalize("Belarus"))
+    assert not _RE_EUA.search(normalize("Business Analyst"))
