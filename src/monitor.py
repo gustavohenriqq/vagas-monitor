@@ -83,6 +83,24 @@ def collect_for_search(profile: SearchProfile, provider_map: dict, max_jobs: int
     return matched
 
 
+def decide_destino(*, is_first_run: bool, config: Config, score: int) -> str:
+    """Decide o que fazer com uma vaga NOVA: notificar, guardar pro digest ou calar.
+
+    Separado do run() para poder ser testado sem rede nem Telegram.
+
+    - "silencioso": execução com SILENT_RUN, que grava no histórico sem avisar
+      ninguém. Serve para absorver uma fonte nova sem despejar centenas de
+      mensagens de uma vez.
+    - "skipped" também na primeira execução, quando o histórico está vazio e
+      INITIAL_NOTIFY não foi pedido.
+    """
+    if config.silent_run:
+        return "skipped"
+    if is_first_run and not config.initial_notify:
+        return "skipped"
+    return "sent" if score >= config.high_score_threshold else "digest"
+
+
 def run(config: Optional[Config] = None, searches: Optional[SearchesFile] = None) -> dict:
     """Executa o ciclo completo do monitor. Retorna um dicionário-resumo."""
     config = config or load_config()
@@ -92,6 +110,8 @@ def run(config: Optional[Config] = None, searches: Optional[SearchesFile] = None
     history = load_history(storage_path)
     is_first_run = len(history) == 0
     logger.info("=== Vagas Monitor iniciando (primeira execução: %s) ===", is_first_run)
+    if config.silent_run:
+        logger.info("Modo silencioso: coleta e grava o histórico, sem enviar nada ao Telegram.")
 
     session = build_session()
     provider_map = build_provider_map(searches, session, config.request_delay_seconds)
@@ -126,23 +146,26 @@ def run(config: Optional[Config] = None, searches: Optional[SearchesFile] = None
                     per_search[profile.name] = per_search.get(profile.name, 0) + 1
                     per_provider[job.provider] = per_provider.get(job.provider, 0) + 1
 
-                    should_notify = (not is_first_run) or config.initial_notify
-                    if not should_notify:
-                        record.notification_status = "skipped"
-                    elif rel.score >= config.high_score_threshold:
+                    destino = decide_destino(is_first_run=is_first_run, config=config,
+                                             score=rel.score)
+                    if destino == "sent":
                         notifier.notify_job(job, profile.name, rel.score, rel.reasons)
                         mark_sent(history, sid)
                         immediate_count += 1
-                    else:
+                    elif destino == "digest":
                         record.notification_status = "digest"   # acumula pro digest
                         digest_added += 1
+                    else:
+                        record.notification_status = "skipped"
                 else:
                     existing.last_seen_at = now
                     if profile.name not in existing.matched_searches:
                         existing.matched_searches.append(profile.name)
 
-        # Digest ranqueado: junta o que ficou pendente (deste run e dos anteriores)
-        if config.send_digest:
+        # Digest ranqueado: junta o que ficou pendente (deste run e dos anteriores).
+        # Em execução silenciosa ele também não sai — senão o "sem notificar"
+        # viraria uma mensagem gigante no fim.
+        if config.send_digest and not config.silent_run:
             pending = [r for r in history.values() if r.notification_status == "digest"]
             pending.sort(key=lambda r: (r.score, r.first_seen_at), reverse=True)
             items = [{

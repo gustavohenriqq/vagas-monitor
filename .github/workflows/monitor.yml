@@ -21,6 +21,9 @@ on:
       send_digest:
         description: "Enviar o digest ranqueado nesta execução"
         default: "false"
+      silent_run:
+        description: "Silencioso: coleta e grava o histórico SEM enviar nada ao Telegram"
+        default: "false"
 
 concurrency:
   group: vagas-monitor
@@ -45,6 +48,8 @@ jobs:
           SEND_SUMMARY: ${{ github.event.inputs.send_summary || 'true' }}
           # Digest sai na execução das 20h BRT (cron 0 23) ou quando pedido manualmente.
           SEND_DIGEST: ${{ github.event.schedule == '0 23 * * *' || github.event.inputs.send_digest == 'true' }}
+          # Só existe no disparo manual; no cron fica sempre falso.
+          SILENT_RUN: ${{ github.event.inputs.silent_run || 'false' }}
           HIGH_SCORE_THRESHOLD: "7"
           # Teto alto: a busca de tech tem muitas palavras-chave; sem isso o Gupy
           # pararia cedo e não cobriria o espectro inteiro de tecnologia.
