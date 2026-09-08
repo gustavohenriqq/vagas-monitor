@@ -195,6 +195,22 @@ recruitee_companies:
   - mindmultiplan        # MIND / Multiplan (1) — BR
   # bunq (13) e trustedshops (19) são válidos, mas só vagas presenciais na Europa.
 
+# Workday. Cada entrada precisa de host|tenant|site, porque o mesmo tenant tem
+# um site por região e a raiz responde 406 (não dá para descobrir sozinho).
+# O nome de exibição é opcional; sem ele, usa o tenant.
+#   https://hp.wd5.myworkdayjobs.com/ExternalCareerSite  ->
+#     hp.wd5.myworkdayjobs.com|hp|ExternalCareerSite|HP
+# Só entram tenants com peso em tecnologia: Alcoa, GM, Dow e AES foram
+# testados e as vagas brasileiras são de chão de fábrica.
+workday_companies:
+  - hp.wd5.myworkdayjobs.com|hp|ExternalCareerSite|HP
+  - mastercard.wd1.myworkdayjobs.com|mastercard|CorporateCareers|Mastercard
+  - salesforce.wd12.myworkdayjobs.com|salesforce|External_Career_Site|Salesforce
+  - adobe.wd5.myworkdayjobs.com|adobe|external_experienced|Adobe
+  # AB InBev está no Workday (tenant abinbev, wd1), mas só com sites de USA,
+  # CAN, MEX, EUR e a sede global — nenhum do Brasil, e busca por "Brazil"
+  # nesses devolve zero. A Ambev contrata por outro sistema no país.
+
 smartrecruiters_companies:
   - BoschGroup           # Bosch (4.812 no mundo, ~80 no Brasil) — o token é case-sensitive
   - DeliveryHero         # Delivery Hero (100+)
@@ -358,6 +374,27 @@ searches:
       - "confins"
       - "jaboticatubas"
       - "baldim"
+    exclude_locations: *fora_do_brasil
+
+  # ---- 4) WORKDAY — BRASIL, QUALQUER MODELO ----
+  # O Workday não expõe modelo de trabalho em lugar nenhum: nem na listagem,
+  # nem no detalhe da vaga, nem no texto da descrição. Toda vaga sai como
+  # "unknown", então ela seria descartada pelas buscas 1 e 2, que filtram por
+  # remoto e híbrido. Esta busca existe só para não perder essas vagas — o
+  # preço é que entra presencial junto, e a triagem fica no painel.
+  - name: "Workday — Brasil (qualquer modelo)"
+    enabled: true
+    profile: brasil
+    precise: true
+    providers: [workday]
+    keywords: []
+    exclude_keywords: []
+    seniority: []
+    workplace_types: []          # de propósito: o Workday não informa
+    locations:                   # em compensação, exige estar no Brasil
+      - "brasil"
+      - "brazil"
+      - "bra"
     exclude_locations: *fora_do_brasil
 
   # ---- 3) PERFIL INTERNACIONAL — remoto aberto ao Brasil/LatAm (PT/ES) ----

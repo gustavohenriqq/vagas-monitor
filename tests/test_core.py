@@ -584,3 +584,75 @@ def test_cargo_forte_vence_contexto_de_outra_area():
     assert not classify_title("Consultor de Vendas de Software").passes
     assert not classify_title("Coordenador de Desenvolvimento Comercial").passes
     assert not classify_title("Analista Recursos Humanos III").passes
+
+
+# ---------------------------------------------------------------- Workday
+WORKDAY_PAYLOAD = {
+    "total": 2,
+    "jobPostings": [
+        {"title": "Senior Machine Learning Engineer", "externalPath": "/job/Porto-Alegre/ML-Eng_JR1",
+         "locationsText": "Porto Alegre, Rio Grande do Sul, Brazil",
+         "postedOn": "Posted 3 Days Ago", "bulletFields": ["JR1"]},
+        {"title": "Software Engineer", "externalPath": "/job/Multi/SW_JR2",
+         "locationsText": "6 Locations", "postedOn": "Posted Today", "bulletFields": ["JR2"]},
+    ],
+}
+
+
+def test_workday_parse():
+    from src.providers.workday import parse_jobs
+    from datetime import date, timedelta
+
+    jobs = parse_jobs(WORKDAY_PAYLOAD, "hp.wd5.myworkdayjobs.com", "ExternalCareerSite", "HP")
+    assert len(jobs) == 2
+    a, b = jobs
+    assert a.company == "HP" and a.stable_id == "workday:HP:JR1"
+    assert a.url == "https://hp.wd5.myworkdayjobs.com/ExternalCareerSite/job/Porto-Alegre/ML-Eng_JR1"
+    assert a.city == "Porto Alegre, Rio Grande do Sul, Brazil"
+    assert a.published_date == (date.today() - timedelta(days=3)).isoformat()
+    # "6 Locations" não é um local: some, senão viraria texto lixo no painel
+    assert b.city == ""
+    assert b.published_date == date.today().isoformat()
+    # o Workday não informa modelo de trabalho em lugar nenhum
+    assert a.workplace_type == "unknown" and b.workplace_type == "unknown"
+
+
+def test_workday_detalhe_sobrescreve_local_e_data():
+    """O detalhe traz local completo e startDate real; a listagem, não."""
+    from src.providers.workday import parse_jobs, aplica_detalhe
+
+    job = parse_jobs(WORKDAY_PAYLOAD, "h", "s", "HP")[1]   # o de "6 Locations"
+    assert job.city == ""
+    aplica_detalhe(job, {
+        "location": "Porto Alegre, Rio Grande do Sul, Brazil",
+        "country": {"descriptor": "Brazil"},
+        "startDate": "2026-08-28",
+    })
+    assert job.city == "Porto Alegre, Rio Grande do Sul, Brazil"
+    assert job.country == "Brazil"
+    assert job.published_date == "2026-08-28"
+
+
+def test_workday_entrada_malformada_e_ignorada():
+    """Config errada não pode derrubar a execução."""
+    from src.providers.workday import _partes
+    assert _partes("host|tenant|site|HP") == ("host", "tenant", "site", "HP")
+    assert _partes("host|tenant|site")[3] == "tenant"       # nome cai no tenant
+    assert _partes("host|tenant") is None
+    assert _partes("") is None
+
+
+def test_workday_remoto_so_quando_o_local_diz():
+    from src.providers.workday import _modelo
+    assert _modelo("Remote - Brazil") == REMOTE
+    assert _modelo("Brazil - Remoto") == REMOTE
+    assert _modelo("Porto Alegre, Brazil") == "unknown"
+    assert _modelo("") == "unknown"
+
+
+def test_workday_busca_pelo_pais_e_nao_por_cargo():
+    """O searchText do Workday casa com o local. Buscar por cargo devolve o
+    mundo inteiro e o Brasil não cabe no teto de páginas — medido: 282 vagas
+    e zero brasileiras. Buscar pelo país traz o recorte certo."""
+    from src.providers.workday import TERMOS_PADRAO
+    assert TERMOS_PADRAO == ("Brazil", "Brasil")
