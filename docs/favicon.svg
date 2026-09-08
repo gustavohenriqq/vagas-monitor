@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="8" fill="#000000"/>
+  <!-- varredura do radar: arcos concêntricos abrindo a partir do canto -->
+  <g fill="none" stroke="#8052ff" stroke-linecap="round">
+    <path d="M7 25a9 9 0 0 1 9-9" stroke-width="2.4" opacity=".45"/>
+    <path d="M7 25a15 15 0 0 1 15-15" stroke-width="2.4" opacity=".75"/>
+    <path d="M7 25a21 21 0 0 1 21-21" stroke-width="2.4"/>
+  </g>
+  <!-- o sinal captado -->
+  <circle cx="7" cy="25" r="2.6" fill="#ffb829"/>
+</svg>

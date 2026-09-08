@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="dark">
 <title>Radar de Vagas</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600&display=swap">
@@ -54,11 +55,7 @@
     display:flex;align-items:center;gap:18px;padding:18px 0;
   }
   .logo{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none}
-  .logo .mark{
-    width:22px;height:22px;flex:none;
-    background:linear-gradient(150deg,var(--iris),var(--verdant));
-    clip-path:polygon(50% 0,100% 100%,0 100%);
-  }
+  .logo .mark{width:26px;height:26px;flex:none;display:block}
   .logo b{font:400 17px/1 var(--display);letter-spacing:-.02em}
   .nav-links{display:flex;gap:22px}
   .nav-links a{
@@ -152,56 +149,101 @@
   .g-bar{transition:opacity .18s}
   .g-bar:hover{opacity:.65}
 
-  /* ---------- filtros ---------- */
-  .filters{display:flex;flex-direction:column;gap:26px;margin-top:8px}
-  .frow{display:flex;flex-direction:column;gap:12px}
-  .flabel{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-  .flabel span{
-    font:600 12px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ash)
+  /* ---------- plataformas ---------- */
+  .plats{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+  .plat{
+    border:1px solid var(--hair);border-radius:var(--r);padding:26px 22px;
+    display:flex;flex-direction:column;gap:6px;transition:border-color .2s,background .2s
   }
-  .flabel em{font:200 13px/1 var(--display);font-style:normal;color:#6f6f6f}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chips button{
-    cursor:pointer;display:inline-flex;align-items:center;gap:9px;
+  .plat:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.02)}
+  .plat b{font:400 21px/1.2 var(--display);letter-spacing:-.03em}
+  .plat span{font:200 14px/1.3 var(--display);color:var(--ash);font-variant-numeric:tabular-nums}
+  .plat em{
+    font:600 10px/1 var(--display);font-style:normal;letter-spacing:.12em;
+    text-transform:uppercase;color:#5f5f5f;margin-top:6px
+  }
+
+  /* ---------- busca compacta (inspirada no BuscaVagas) ---------- */
+  .searchbar{
+    display:flex;gap:14px;align-items:center;
+    border:1px solid var(--hair);border-radius:var(--pill);padding:6px 6px 6px 22px;
+    transition:border-color .2s
+  }
+  .searchbar:focus-within{border-color:var(--iris)}
+  .searchbar .lupa{width:17px;height:17px;flex:none;stroke:var(--ash);fill:none;stroke-width:2}
+  .searchbar input{
+    flex:1;min-width:0;font:400 16px/1 var(--display);color:var(--bone);
+    background:transparent;border:0;padding:14px 0
+  }
+  .searchbar input::placeholder{color:#5f5f5f}
+  .searchbar input:focus{outline:none}
+
+  .filtros{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:16px}
+  .dd{position:relative}
+  .dd>button{
+    cursor:pointer;display:inline-flex;align-items:center;gap:10px;
     font:400 14px/1 var(--display);color:var(--ash);
     background:transparent;border:1px solid var(--hair);border-radius:var(--pill);
-    padding:10px 17px;transition:color .18s,border-color .18s,background .18s
+    padding:11px 16px;transition:color .18s,border-color .18s
   }
-  .chips button .n{font:400 12px var(--display);color:#6f6f6f;font-variant-numeric:tabular-nums}
-  .chips button:hover{color:var(--bone);border-color:rgba(255,255,255,.22)}
-  .chips button[aria-pressed="true"]{
-    background:var(--iris);border-color:var(--iris);color:#fff
+  .dd>button:hover{color:var(--bone);border-color:rgba(255,255,255,.22)}
+  .dd>button[aria-expanded="true"]{border-color:var(--iris);color:var(--bone)}
+  .dd>button .sel{
+    font:400 12px/1 var(--display);color:#fff;background:var(--iris);
+    border-radius:var(--pill);padding:4px 8px;font-variant-numeric:tabular-nums
   }
-  .chips button[aria-pressed="true"] .n{color:rgba(255,255,255,.75)}
+  .dd>button .car{
+    width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;
+    border-top:5px solid currentColor;opacity:.65;transition:transform .18s
+  }
+  .dd>button[aria-expanded="true"] .car{transform:rotate(180deg)}
+  /* O painel precisa de superfície para ser legível sobre a lista — é a única
+     exceção ao "nada de fundo" da Dala, e fica no mínimo: quase preto + fio. */
+  .dd-panel{
+    position:absolute;top:calc(100% + 9px);left:0;z-index:30;
+    min-width:264px;max-height:330px;overflow-y:auto;
+    background:#080808;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:8px
+  }
+  .dd-panel[hidden]{display:none}
+  .opt{
+    display:flex;align-items:center;gap:12px;width:100%;cursor:pointer;text-align:left;
+    font:400 14px/1.2 var(--display);color:var(--mist);
+    background:transparent;border:0;border-radius:12px;padding:11px 12px;
+    transition:background .15s,color .15s
+  }
+  .opt:hover{background:rgba(255,255,255,.055);color:var(--bone)}
+  .opt .box{
+    width:16px;height:16px;flex:none;border:1px solid rgba(255,255,255,.28);border-radius:5px;
+    display:grid;place-items:center;transition:background .15s,border-color .15s
+  }
+  .opt.radio .box{border-radius:50%}
+  .opt[aria-checked="true"] .box{background:var(--iris);border-color:var(--iris)}
+  .opt .box svg{width:9px;height:9px;stroke:#fff;fill:none;stroke-width:3.6;
+    stroke-linecap:round;stroke-linejoin:round;opacity:0}
+  .opt[aria-checked="true"] .box svg{opacity:1}
+  .opt .n{margin-left:auto;font:400 12px var(--display);color:#6f6f6f;font-variant-numeric:tabular-nums}
 
-  .inline{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end}
-  .fld{display:flex;flex-direction:column;gap:11px}
-  .fld label{
-    font:600 12px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ash)
+  .score-fld{
+    display:inline-flex;align-items:center;gap:12px;
+    border:1px solid var(--hair);border-radius:var(--pill);padding:9px 18px
   }
-  .fld.grow{flex:1 1 300px;min-width:220px}
-  input[type=search],select{
-    font:400 15px/1 var(--display);color:var(--bone);width:100%;
-    background:transparent;border:0;border-bottom:1px solid var(--hair);
-    border-radius:0;padding:10px 2px;appearance:none;transition:border-color .2s
-  }
-  input[type=search]::placeholder{color:#5f5f5f}
-  input[type=search]:focus,select:focus{border-bottom-color:var(--iris);outline:none}
+  .score-fld label{font:400 14px/1 var(--display);color:var(--ash);white-space:nowrap}
+  .score-fld output{font:400 15px/1 var(--display);color:var(--iris);min-width:1.1em;
+    font-variant-numeric:tabular-nums;text-align:right}
+  input[type=range]{width:104px;accent-color:var(--iris);background:transparent;padding:0}
   select{
-    padding-right:22px;cursor:pointer;
+    font:400 14px/1 var(--display);color:var(--bone);cursor:pointer;
+    background:transparent;border:1px solid var(--hair);border-radius:var(--pill);
+    padding:10px 30px 10px 16px;appearance:none;transition:border-color .2s;
     background-image:linear-gradient(45deg,transparent 50%,var(--ash) 50%),
                      linear-gradient(135deg,var(--ash) 50%,transparent 50%);
-    background-position:calc(100% - 11px) 55%,calc(100% - 6px) 55%;
+    background-position:calc(100% - 17px) 55%,calc(100% - 12px) 55%;
     background-size:5px 5px,5px 5px;background-repeat:no-repeat
   }
+  select:focus{border-color:var(--iris);outline:none}
   select option{background:#111;color:#fff}
-  input[type=range]{width:150px;accent-color:var(--iris);background:transparent;padding:0}
-  .rng{display:flex;align-items:center;gap:14px;height:38px}
-  .rng output{
-    font:400 17px/1 var(--display);color:var(--iris);min-width:1.2em;font-variant-numeric:tabular-nums
-  }
   .clear{
-    cursor:pointer;background:transparent;border:0;padding:10px 0;height:38px;
+    cursor:pointer;background:transparent;border:0;padding:11px 4px;
     font:400 14px/1 var(--display);color:var(--ash);
     border-bottom:1px solid transparent;transition:color .2s,border-color .2s
   }
@@ -312,7 +354,17 @@
 
 <div class="wrap">
   <nav class="nav">
-    <a class="logo" href="#topo"><span class="mark"></span><b>Radar de Vagas</b></a>
+    <a class="logo" href="#topo">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <g fill="none" stroke="#8052ff" stroke-linecap="round">
+          <path d="M7 25a9 9 0 0 1 9-9" stroke-width="2.4" opacity=".45"/>
+          <path d="M7 25a15 15 0 0 1 15-15" stroke-width="2.4" opacity=".75"/>
+          <path d="M7 25a21 21 0 0 1 21-21" stroke-width="2.4"/>
+        </g>
+        <circle cx="7" cy="25" r="2.6" fill="#ffb829"/>
+      </svg>
+      <b>Radar de Vagas</b>
+    </a>
     <div class="nav-links">
       <a href="#panorama">Panorama</a>
       <a href="#vagas">Vagas</a>
@@ -347,12 +399,20 @@
         <p>A linha marca o corte de 7.</p>
         <svg id="c-score" role="img" aria-label="Distribuição de vagas por score"></svg>
       </div>
-      <div class="chart" id="fontes">
+      <div class="chart">
         <h3>Vagas por fonte</h3>
         <p>Quanto cada provider trouxe.</p>
         <svg id="c-prov" role="img" aria-label="Vagas por fonte"></svg>
       </div>
     </div>
+  </section>
+
+  <section id="fontes">
+    <div class="sec-head">
+      <h2>Plataformas integradas</h2>
+      <p>Todas as fontes são API ou RSS público. Nada de LinkedIn, Indeed ou scraping que viole termos de uso.</p>
+    </div>
+    <div class="plats" id="plats"></div>
   </section>
 
   <section id="vagas">
@@ -361,59 +421,32 @@
       <p>Filtre por região, senioridade, fonte e situação. Marque as que você já se candidatou — isso fica só no seu navegador.</p>
     </div>
 
-    <div class="filters">
-      <div class="frow">
-        <div class="flabel"><span>Situação no Telegram</span><em>escolha uma</em></div>
-        <div class="chips" id="g-st" role="group" aria-label="Situação no Telegram"></div>
+    <div class="searchbar">
+      <svg class="lupa" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6" stroke-linecap="round"/>
+      </svg>
+      <input type="search" id="q" placeholder="Cargo, empresa, palavra-chave…" autocomplete="off"
+             aria-label="Buscar por cargo ou empresa">
+    </div>
+
+    <div class="filtros" id="filtros">
+      <div class="score-fld">
+        <label for="f-s">Score mínimo</label>
+        <input type="range" id="f-s" min="0" max="10" step="1" value="0">
+        <output id="f-s-out">0</output>
       </div>
-      <div class="frow">
-        <div class="flabel"><span>Região da vaga</span><em>pelo local declarado, não pelo perfil da busca</em></div>
-        <div class="chips" id="g-r" role="group" aria-label="Região da vaga"></div>
-      </div>
-      <div class="frow">
-        <div class="flabel"><span>Candidatura</span><em>as marcações ficam só neste navegador</em></div>
-        <div class="chips" id="g-ap" role="group" aria-label="Candidatura"></div>
-      </div>
-      <div class="frow">
-        <div class="flabel"><span>Senioridade</span><em>pode marcar várias; sem senioridade declarada aparece em qualquer seleção</em></div>
-        <div class="chips" id="g-sn" role="group" aria-label="Senioridade"></div>
-      </div>
-      <div class="frow">
-        <div class="flabel"><span>Modelo de trabalho</span><em>pode marcar vários</em></div>
-        <div class="chips" id="g-w" role="group" aria-label="Modelo de trabalho"></div>
-      </div>
-      <div class="frow">
-        <div class="flabel"><span>Fonte</span><em>pode marcar várias</em></div>
-        <div class="chips" id="g-p" role="group" aria-label="Fonte"></div>
-      </div>
-      <div class="frow">
-        <div class="flabel"><span>Perfil da busca</span><em>pode marcar vários</em></div>
-        <div class="chips" id="g-pf" role="group" aria-label="Perfil da busca"></div>
-      </div>
-      <div class="inline">
-        <div class="fld grow">
-          <label for="q">Cargo ou empresa</label>
-          <input type="search" id="q" placeholder="engenheiro de dados, CI&amp;T…" autocomplete="off">
-        </div>
-        <div class="fld">
-          <label for="f-s">Score mínimo</label>
-          <div class="rng"><input type="range" id="f-s" min="0" max="10" step="1" value="0"><output id="f-s-out">0</output></div>
-        </div>
-        <div class="fld">
-          <label for="f-o">Ordem</label>
-          <select id="f-o">
-            <option value="d">Mais recentes</option>
-            <option value="s">Maior score</option>
-            <option value="e">Empresa (A–Z)</option>
-          </select>
-        </div>
-        <button class="clear" id="reset" type="button">Limpar filtros</button>
-      </div>
+      <button class="clear" id="reset" type="button">Limpar filtros</button>
     </div>
 
     <div class="resbar">
       <span class="cnt" id="cnt"></span>
       <span class="pp">
+        <label for="f-o">Ordenar por</label>
+        <select id="f-o">
+          <option value="d">Mais recentes</option>
+          <option value="s">Maior score</option>
+          <option value="e">Empresa (A–Z)</option>
+        </select>
         <label for="f-pp">Por página</label>
         <select id="f-pp"><option>25</option><option selected>50</option><option>100</option><option>200</option></select>
       </span>
@@ -686,18 +719,118 @@
     paginar();
   }
 
-  function grupoMulti(el, contagem, rotulos, conjunto) {
-    const itens = Object.entries(contagem).filter((kv) => kv[0]).sort((a, b) => b[1] - a[1]);
-    el.innerHTML = itens.map((kv) =>
-      '<button type="button" data-v="' + esc(kv[0]) + '" aria-pressed="false">'
-      + esc((rotulos && rotulos[kv[0]]) || kv[0]) + '<span class="n">' + nf.format(kv[1]) + "</span></button>").join("");
-    el.addEventListener("click", (ev) => {
-      const b = ev.target.closest("button[data-v]"); if (!b) return;
-      const v = b.dataset.v;
-      if (conjunto.has(v)) { conjunto.delete(v); b.setAttribute("aria-pressed", "false"); }
-      else { conjunto.add(v); b.setAttribute("aria-pressed", "true"); }
+  /* ============ dropdowns de filtro ============
+     A barra do BuscaVagas é compacta porque usa <select> de escolha única.
+     Aqui o painel abre com caixas de seleção, então mantém a multi-seleção
+     sem devolver sete fileiras de chips à página. */
+  const TICK = '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>';
+  const dropdowns = [];
+
+  function fecharTodos(exceto) {
+    dropdowns.forEach((d) => {
+      if (d.raiz === exceto) return;
+      d.painel.hidden = true;
+      d.botao.setAttribute("aria-expanded", "false");
+    });
+  }
+
+  function criarDropdown(cfg) {
+    const raiz = document.createElement("div");
+    raiz.className = "dd";
+    const idPainel = "dd-" + cfg.chave;
+    raiz.innerHTML = '<button type="button" aria-expanded="false" aria-controls="' + idPainel + '">'
+      + '<span class="rot">' + esc(cfg.rotulo) + '</span><span class="car"></span></button>'
+      + '<div class="dd-panel" id="' + idPainel + '" role="group" aria-label="' + esc(cfg.rotulo) + '" hidden></div>';
+    const botao = raiz.querySelector("button");
+    const painel = raiz.querySelector(".dd-panel");
+
+    painel.innerHTML = cfg.itens.map((it) =>
+      '<button type="button" class="opt' + (cfg.unico ? " radio" : "") + '" role="'
+      + (cfg.unico ? "radio" : "checkbox") + '" data-v="' + esc(it[0]) + '" aria-checked="'
+      + String(cfg.marcado(it[0])) + '">'
+      + '<span class="box">' + TICK + "</span>" + esc(it[1])
+      + '<span class="n">' + nf.format(it[2]) + "</span></button>").join("");
+
+    function pintarBotao() {
+      const n = cfg.selecionados();
+      const antigo = botao.querySelector(".sel");
+      if (antigo) antigo.remove();
+      if (n) {
+        const b = document.createElement("span");
+        b.className = "sel";
+        b.textContent = typeof n === "string" ? n : nf.format(n);
+        botao.insertBefore(b, botao.querySelector(".car"));
+      }
+    }
+    pintarBotao();
+
+    botao.addEventListener("click", () => {
+      const abrindo = painel.hidden;
+      fecharTodos(raiz);
+      painel.hidden = !abrindo;
+      botao.setAttribute("aria-expanded", String(abrindo));
+    });
+    painel.addEventListener("click", (ev) => {
+      const o = ev.target.closest(".opt"); if (!o) return;
+      cfg.alternar(o.dataset.v);
+      painel.querySelectorAll(".opt").forEach((x) =>
+        x.setAttribute("aria-checked", String(cfg.marcado(x.dataset.v))));
+      pintarBotao();
       aplicar();
     });
+
+    dropdowns.push({ raiz, botao, painel, pintarBotao, cfg });
+    return raiz;
+  }
+
+  function repintarDropdowns() {
+    dropdowns.forEach((d) => {
+      // `recontar` existe onde a contagem muda em tempo de uso (candidatura,
+      // que depende do que você marcou). Sem isso o número ficaria congelado.
+      const novos = d.cfg.recontar ? d.cfg.recontar() : null;
+      d.painel.querySelectorAll(".opt").forEach((x) => {
+        x.setAttribute("aria-checked", String(d.cfg.marcado(x.dataset.v)));
+        if (novos) {
+          const it = novos.find((i) => String(i[0]) === x.dataset.v);
+          const n = x.querySelector(".n");
+          if (it && n) n.textContent = nf.format(it[2]);
+        }
+      });
+      d.pintarBotao();
+    });
+  }
+
+  document.addEventListener("click", (ev) => {
+    if (!ev.target.closest(".dd")) fecharTodos(null);
+  });
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") fecharTodos(null);
+  });
+
+  /* Nome de exibição das plataformas. A chave é a do provider no payload. */
+  const PLATAFORMAS = {
+    gupy: ["Gupy", "ATS brasileiro"],
+    inhire: ["InHire", "ATS brasileiro"],
+    recrutei: ["Recrutei", "agregador brasileiro"],
+    greenhouse: ["Greenhouse", "ATS global"],
+    lever: ["Lever", "ATS global"],
+    ashby: ["Ashby", "ATS global"],
+    recruitee: ["Recruitee", "ATS europeu"],
+    smartrecruiters: ["SmartRecruiters", "ATS corporativo"],
+    wwr: ["We Work Remotely", "mural remoto"],
+    remotive: ["Remotive", "mural remoto"],
+    remoteok: ["RemoteOK", "mural remoto"],
+  };
+
+  function renderPlataformas(porProvider) {
+    $("#plats").innerHTML = Object.entries(porProvider)
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, n]) => {
+        const info = PLATAFORMAS[k] || [k, "fonte pública"];
+        return '<div class="plat"><b>' + esc(info[0]) + "</b>"
+          + "<span>" + nf.format(n) + (n === 1 ? " vaga" : " vagas") + "</span>"
+          + "<em>" + esc(info[1]) + "</em></div>";
+      }).join("");
   }
 
   const contar = (chave) => dados.vagas.reduce((acc, v) => {
@@ -734,33 +867,57 @@
     })(), 7);
     graficoFonte($("#c-prov"), Object.entries(ag.provider).sort((a, b) => b[1] - a[1]));
 
+    renderPlataformas(ag.provider);
+
     const cont = Object.assign({}, ag.status, { notificadas: dados.notificadas, "": dados.total });
-    $("#g-st").innerHTML = SITUACOES.map((s) =>
-      '<button type="button" data-st="' + s[0] + '" aria-pressed="' + (s[0] === estado.st) + '">'
-      + s[1] + '<span class="n">' + nf.format(cont[s[0]] || 0) + "</span></button>").join("");
-    $("#g-st").addEventListener("click", (ev) => {
-      const b = ev.target.closest("button[data-st]"); if (!b) return;
-      estado.st = b.dataset.st;
-      $("#g-st").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      aplicar();
-    });
+    const filtros = $("#filtros");
+    const antes = filtros.firstChild;
+
+    // Escolha única: situação e candidatura.
+    filtros.insertBefore(criarDropdown({
+      chave: "st", rotulo: "Situação",
+      itens: SITUACOES.map((s) => [s[0], s[1], cont[s[0]] || 0]),
+      unico: true,
+      marcado: (v) => estado.st === v,
+      selecionados: () => (estado.st === "notificadas" ? 0 : 1),
+      alternar: (v) => { estado.st = v; },
+    }), antes);
 
     const CANDIDATURA = [["", "Todas"], ["nao", "Não aplicadas"], ["sim", "Já apliquei"]];
+    const contaAp = () => ({ "": dados.total, sim: aplicadas.size, nao: dados.total - aplicadas.size });
+    filtros.insertBefore(criarDropdown({
+      chave: "ap", rotulo: "Candidatura",
+      itens: CANDIDATURA.map((c) => [c[0], c[1], contaAp()[c[0]]]),
+      recontar: () => CANDIDATURA.map((c) => [c[0], c[1], contaAp()[c[0]]]),
+      unico: true,
+      marcado: (v) => estado.ap === v,
+      selecionados: () => (estado.ap ? 1 : 0),
+      alternar: (v) => { estado.ap = v; },
+    }), antes);
+
+    // Multi-seleção: região, senioridade, modelo, fonte e perfil.
+    const multi = (chave, rotulo, contagem, rotulos, conjunto) => {
+      const itens = Object.entries(contagem).filter((kv) => kv[0])
+        .sort((a, b) => b[1] - a[1])
+        .map((kv) => [kv[0], (rotulos && rotulos[kv[0]]) || kv[0], kv[1]]);
+      filtros.insertBefore(criarDropdown({
+        chave, rotulo, itens, unico: false,
+        marcado: (v) => conjunto.has(v),
+        selecionados: () => conjunto.size,
+        alternar: (v) => { conjunto.has(v) ? conjunto.delete(v) : conjunto.add(v); },
+      }), antes);
+    };
+    multi("r", "Região", ag.regiao || contar("r"), ROT_R, estado.r);
+    multi("sn", "Senioridade", contar("sn"), ROT_SN, estado.sn);
+    multi("w", "Modelo", contar("w"), ROT_W, estado.w);
+    multi("p", "Fonte", ag.provider, null, estado.p);
+    multi("pf", "Perfil", ag.perfil, null, estado.pf);
+
     function pintarCandidatura() {
-      const n = { "": dados.total, sim: aplicadas.size, nao: dados.total - aplicadas.size };
-      $("#g-ap").innerHTML = CANDIDATURA.map((c) =>
-        '<button type="button" data-apf="' + c[0] + '" aria-pressed="' + (c[0] === estado.ap) + '">'
-        + c[1] + '<span class="n">' + nf.format(n[c[0]]) + "</span></button>").join("");
+      repintarDropdowns();
       const t = $("#tile-ap");
       if (t) t.textContent = nf.format(aplicadas.size);
     }
-    pintarCandidatura();
-    $("#g-ap").addEventListener("click", (ev) => {
-      const b = ev.target.closest("button[data-apf]"); if (!b) return;
-      estado.ap = b.dataset.apf;
-      pintarCandidatura();
-      aplicar();
-    });
 
     // Alternar a marcação atualiza a linha no lugar; só refaz a lista quando
     // o filtro de candidatura está ativo e a vaga precisa entrar ou sair.
@@ -780,12 +937,6 @@
       pintarCandidatura();
       if (estado.ap) aplicar();
     });
-
-    grupoMulti($("#g-r"), ag.regiao || contar("r"), ROT_R, estado.r);
-    grupoMulti($("#g-sn"), contar("sn"), ROT_SN, estado.sn);
-    grupoMulti($("#g-w"), contar("w"), ROT_W, estado.w);
-    grupoMulti($("#g-p"), ag.provider, null, estado.p);
-    grupoMulti($("#g-pf"), ag.perfil, null, estado.pf);
 
     const g = new Date(dados.gerado_em);
     $("#foot-meta").innerHTML = "Atualizado em <b>"
@@ -813,11 +964,8 @@
       // você inseriu, não filtro.
       estado.st = "notificadas"; estado.q = ""; estado.s = 0; estado.o = "d"; estado.ap = "";
       [estado.sn, estado.w, estado.p, estado.pf, estado.r].forEach((c) => c.clear());
-      pintarCandidatura();
       $("#q").value = ""; $("#f-o").value = "d"; $("#f-s").value = "0"; $("#f-s-out").value = "0";
-      document.querySelectorAll(".chips button[data-v]").forEach((x) => x.setAttribute("aria-pressed", "false"));
-      $("#g-st").querySelectorAll("button").forEach((x) =>
-        x.setAttribute("aria-pressed", String(x.dataset.st === "notificadas")));
+      repintarDropdowns();
       aplicar();
     });
 
