@@ -656,3 +656,38 @@ def test_workday_busca_pelo_pais_e_nao_por_cargo():
     e zero brasileiras. Buscar pelo país traz o recorte certo."""
     from src.providers.workday import TERMOS_PADRAO
     assert TERMOS_PADRAO == ("Brazil", "Brasil")
+
+
+# ---------------------------------------------------------------- execução silenciosa
+def _cfg(**kw):
+    from src.config import Config
+    base = dict(silent_run=False, initial_notify=False, high_score_threshold=7)
+    base.update(kw)
+    return Config(**base)
+
+
+def test_decide_destino_normal():
+    """Fora do modo silencioso: score alto notifica na hora, o resto vai pro digest."""
+    from src.monitor import decide_destino
+    c = _cfg()
+    assert decide_destino(is_first_run=False, config=c, score=9) == "sent"
+    assert decide_destino(is_first_run=False, config=c, score=7) == "sent"
+    assert decide_destino(is_first_run=False, config=c, score=6) == "digest"
+
+
+def test_decide_destino_silencioso_nao_notifica_nada():
+    """SILENT_RUN grava no histórico sem mandar nada — nem alerta, nem digest."""
+    from src.monitor import decide_destino
+    c = _cfg(silent_run=True)
+    for score in (0, 6, 7, 10):
+        assert decide_destino(is_first_run=False, config=c, score=score) == "skipped"
+    # e continua calado mesmo com initial_notify pedido
+    c2 = _cfg(silent_run=True, initial_notify=True)
+    assert decide_destino(is_first_run=True, config=c2, score=10) == "skipped"
+
+
+def test_decide_destino_primeira_execucao():
+    """Histórico vazio não dispara enxurrada, a menos que peçam."""
+    from src.monitor import decide_destino
+    assert decide_destino(is_first_run=True, config=_cfg(), score=10) == "skipped"
+    assert decide_destino(is_first_run=True, config=_cfg(initial_notify=True), score=10) == "sent"
