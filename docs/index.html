@@ -6,7 +6,8 @@
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="dark">
 <title>Radar de Vagas</title>
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/icone-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="img/icone-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600&display=swap">
@@ -54,9 +55,9 @@
     position:sticky;top:0;z-index:40;background:var(--void);
     display:flex;align-items:center;gap:18px;padding:18px 0;
   }
-  .logo{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none}
-  .logo .mark{width:26px;height:26px;flex:none;display:block}
-  .logo b{font:400 17px/1 var(--display);letter-spacing:-.02em}
+  .logo{display:flex;align-items:center;margin-right:auto;text-decoration:none}
+  .logo img{height:34px;width:auto;display:block}
+  @media (max-width:520px){.logo img{height:28px}}
   .nav-links{display:flex;gap:22px}
   .nav-links a{
     font:600 14px/1.2 var(--display);letter-spacing:.025em;text-transform:uppercase;
@@ -156,7 +157,17 @@
     display:flex;flex-direction:column;gap:6px;transition:border-color .2s,background .2s
   }
   .plat:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.02)}
-  .plat b{font:400 21px/1.2 var(--display);letter-spacing:-.03em}
+  /* Os logos chegam em cores e pesos diferentes — vários são pretos puros e
+     sumiriam no void. Forçados a branco ficam legíveis e consistentes; no
+     hover a marca volta à cor original. */
+  .plat .logo-plat{height:46px;display:flex;align-items:center;margin-bottom:14px}
+  .plat img{
+    max-height:26px;max-width:100%;width:auto;object-fit:contain;
+    filter:brightness(0) invert(1);opacity:.82;transition:filter .25s,opacity .25s
+  }
+  .plat img.sq{max-height:34px}
+  .plat:hover img{filter:none;opacity:1}
+  .plat b{font:400 17px/1.2 var(--display);letter-spacing:-.02em}
   .plat span{font:200 14px/1.3 var(--display);color:var(--ash);font-variant-numeric:tabular-nums}
   .plat em{
     font:600 10px/1 var(--display);font-style:normal;letter-spacing:.12em;
@@ -354,16 +365,8 @@
 
 <div class="wrap">
   <nav class="nav">
-    <a class="logo" href="#topo">
-      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
-        <g fill="none" stroke="#8052ff" stroke-linecap="round">
-          <path d="M7 25a9 9 0 0 1 9-9" stroke-width="2.4" opacity=".45"/>
-          <path d="M7 25a15 15 0 0 1 15-15" stroke-width="2.4" opacity=".75"/>
-          <path d="M7 25a21 21 0 0 1 21-21" stroke-width="2.4"/>
-        </g>
-        <circle cx="7" cy="25" r="2.6" fill="#ffb829"/>
-      </svg>
-      <b>Radar de Vagas</b>
+    <a class="logo" href="#topo" aria-label="Radar de Vagas — início">
+      <img src="img/marca.png" alt="Radar de Vagas" width="760" height="218">
     </a>
     <div class="nav-links">
       <a href="#panorama">Panorama</a>
@@ -815,19 +818,27 @@
     greenhouse: ["Greenhouse", "ATS global"],
     lever: ["Lever", "ATS global"],
     ashby: ["Ashby", "ATS global"],
-    recruitee: ["Recruitee", "ATS europeu"],
-    smartrecruiters: ["SmartRecruiters", "ATS corporativo"],
+    recruitee: ["Recruitee", "ATS europeu · grupo Tellent"],
+    smartrecruiters: ["SmartRecruiters", "ATS corporativo · SAP"],
     wwr: ["We Work Remotely", "mural remoto"],
     remotive: ["Remotive", "mural remoto"],
     remoteok: ["RemoteOK", "mural remoto"],
   };
+
+  // Marcas quadradas: sobem um pouco de altura para não parecer menores que
+  // os wordmarks, que são muito mais largos que altos.
+  const LOGO_QUADRADO = new Set(["greenhouse", "lever", "recrutei"]);
 
   function renderPlataformas(porProvider) {
     $("#plats").innerHTML = Object.entries(porProvider)
       .sort((a, b) => b[1] - a[1])
       .map(([k, n]) => {
         const info = PLATAFORMAS[k] || [k, "fonte pública"];
-        return '<div class="plat"><b>' + esc(info[0]) + "</b>"
+        // onerror: se o SVG faltar, some a imagem e o nome abaixo segura o card.
+        const logo = '<div class="logo-plat"><img src="logos/' + esc(k) + '.svg" alt="' + esc(info[0])
+          + '" loading="lazy"' + (LOGO_QUADRADO.has(k) ? ' class="sq"' : "")
+          + ' onerror="this.remove()"></div>';
+        return '<div class="plat">' + logo + "<b>" + esc(info[0]) + "</b>"
           + "<span>" + nf.format(n) + (n === 1 ? " vaga" : " vagas") + "</span>"
           + "<em>" + esc(info[1]) + "</em></div>";
       }).join("");
