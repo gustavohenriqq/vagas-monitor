@@ -157,16 +157,22 @@
     display:flex;flex-direction:column;gap:6px;transition:border-color .2s,background .2s
   }
   .plat:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.02)}
-  /* Os logos chegam em cores e pesos diferentes — vários são pretos puros e
-     sumiriam no void. Forçados a branco ficam legíveis e consistentes; no
-     hover a marca volta à cor original. */
-  .plat .logo-plat{height:46px;display:flex;align-items:center;margin-bottom:14px}
+  .plat .logo-plat{height:44px;display:flex;align-items:center;margin-bottom:16px}
   .plat img{
-    max-height:26px;max-width:100%;width:auto;object-fit:contain;
-    filter:brightness(0) invert(1);opacity:.82;transition:filter .25s,opacity .25s
+    max-width:100%;width:auto;object-fit:contain;opacity:.9;transition:opacity .2s
   }
+  .plat:hover img{opacity:1}
+  /* Só o logo monocromático escuro é forçado a branco — no void ele sumiria.
+     Logo colorido fica na cor original: inverter mataria a identidade da
+     marca, e quem tem fundo próprio (o quadrado azul do Recrutei) viraria
+     um bloco branco sólido. */
+  .plat img.inv{filter:brightness(0) invert(1)}
+  /* Altura por proporção, para o wordmark largo não parecer gigante ao lado
+     da marca quadrada. */
+  .plat img.xwide{max-height:17px}
+  .plat img.wide{max-height:23px}
+  .plat img.med{max-height:28px}
   .plat img.sq{max-height:34px}
-  .plat:hover img{filter:none;opacity:1}
   .plat b{font:400 17px/1.2 var(--display);letter-spacing:-.02em}
   .plat span{font:200 14px/1.3 var(--display);color:var(--ash);font-variant-numeric:tabular-nums}
   .plat em{
@@ -825,19 +831,29 @@
     remoteok: ["RemoteOK", "mural remoto"],
   };
 
-  // Marcas quadradas: sobem um pouco de altura para não parecer menores que
-  // os wordmarks, que são muito mais largos que altos.
-  const LOGO_QUADRADO = new Set(["greenhouse", "lever", "recrutei"]);
+  /* Altura do logo pela proporção real do viewBox de cada arquivo: o wordmark
+     do We Work Remotely é 10,8x mais largo que alto, a marca do Lever é
+     quadrada. Sem isso um parece gigante ao lado do outro. */
+  const LOGO_ESCALA = {
+    wwr: "xwide",                                                   // 10,81
+    smartrecruiters: "wide", inhire: "wide", remotive: "wide",       // 5,06 a 4,10
+    ashby: "wide", recruitee: "wide",                                // 3,33 e 3,27
+    gupy: "med",                                                     // 2,70
+    greenhouse: "sq", lever: "sq", recrutei: "sq",                   // 1,00
+  };
+  // Logos monocromáticos escuros. Os demais têm cor própria e ficam como são.
+  const LOGO_INVERTE = new Set(["wwr", "inhire", "greenhouse", "lever"]);
 
   function renderPlataformas(porProvider) {
     $("#plats").innerHTML = Object.entries(porProvider)
       .sort((a, b) => b[1] - a[1])
       .map(([k, n]) => {
         const info = PLATAFORMAS[k] || [k, "fonte pública"];
+        const classes = [LOGO_ESCALA[k] || "wide"];
+        if (LOGO_INVERTE.has(k)) classes.push("inv");
         // onerror: se o SVG faltar, some a imagem e o nome abaixo segura o card.
         const logo = '<div class="logo-plat"><img src="logos/' + esc(k) + '.svg" alt="' + esc(info[0])
-          + '" loading="lazy"' + (LOGO_QUADRADO.has(k) ? ' class="sq"' : "")
-          + ' onerror="this.remove()"></div>';
+          + '" loading="lazy" class="' + classes.join(" ") + '" onerror="this.remove()"></div>';
         return '<div class="plat">' + logo + "<b>" + esc(info[0]) + "</b>"
           + "<span>" + nf.format(n) + (n === 1 ? " vaga" : " vagas") + "</span>"
           + "<em>" + esc(info[1]) + "</em></div>";
