@@ -12,10 +12,12 @@ from .lever import LeverProvider
 from .ashby import AshbyProvider
 from .recruitee import RecruteeProvider
 from .smartrecruiters import SmartRecruitersProvider
+from .workday import WorkdayProvider
 
 __all__ = [
     "JobProvider", "build_session",
     "GupyProvider", "InhireProvider", "WwrProvider", "GreenhouseProvider",
     "RecruteiProvider", "RemotiveProvider", "RemoteOkProvider",
     "LeverProvider", "AshbyProvider", "RecruteeProvider", "SmartRecruitersProvider",
+    "WorkdayProvider",
 ]

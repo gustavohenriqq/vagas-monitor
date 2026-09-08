@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 VALID_PROVIDERS = (
     "gupy", "inhire", "wwr", "greenhouse", "recrutei",
     "remotive", "remoteok", "lever", "ashby", "recruitee", "smartrecruiters",
+    "workday",
 )
 VALID_WORKPLACE = ("remote", "hybrid", "onsite")
 VALID_SENIORITY = ("estagio", "junior", "pleno", "senior", "lead", "indefinido")
@@ -116,6 +117,7 @@ COMPANY_LIST_KEYS = {
     "ashby": "ashby_companies",
     "recruitee": "recruitee_companies",
     "smartrecruiters": "smartrecruiters_companies",
+    "workday": "workday_companies",
 }
 
 

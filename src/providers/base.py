@@ -53,9 +53,44 @@ def fetch_json(
 
     Trata 403/404/429/5xx e erros de conexão sem propagar exceção.
     """
+    return _request("GET", session, url, params=params, headers=headers, delay=delay)
+
+
+def post_json(
+    session: requests.Session,
+    url: str,
+    payload: dict,
+    *,
+    headers: Optional[dict] = None,
+    delay: float = 1.0,
+) -> Optional[dict]:
+    """
+    POST com corpo JSON, mesmas garantias do fetch_json.
+
+    Existe porque a API pública do Workday só responde a POST — todas as
+    outras fontes usam GET.
+    """
+    cabecalhos = {"Content-Type": "application/json", "Accept": "application/json"}
+    if headers:
+        cabecalhos.update(headers)
+    return _request("POST", session, url, json=payload, headers=cabecalhos, delay=delay)
+
+
+def _request(
+    method: str,
+    session: requests.Session,
+    url: str,
+    *,
+    params: Optional[dict] = None,
+    json: Optional[dict] = None,
+    headers: Optional[dict] = None,
+    delay: float = 1.0,
+) -> Optional[dict]:
+    """Motor compartilhado de GET/POST: retry, backoff e tratamento de status."""
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            resp = session.get(url, params=params, headers=headers, timeout=REQUEST_TIMEOUT)
+            resp = session.request(method, url, params=params, json=json,
+                                   headers=headers, timeout=REQUEST_TIMEOUT)
 
             if resp.status_code == 200:
                 try:

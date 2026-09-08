@@ -23,7 +23,7 @@ from .models import JobPosting
 from .providers import (
     GupyProvider, InhireProvider, WwrProvider, GreenhouseProvider, RecruteiProvider,
     RemotiveProvider, RemoteOkProvider, LeverProvider, AshbyProvider,
-    RecruteeProvider, SmartRecruitersProvider, build_session,
+    RecruteeProvider, SmartRecruitersProvider, WorkdayProvider, build_session,
 )
 from .relevance import evaluate
 from .searches import SearchProfile, SearchesFile, load_searches
@@ -62,6 +62,7 @@ def build_provider_map(searches: SearchesFile, session, delay: float) -> dict:
         "ashby": AshbyProvider(companies=c("ashby"), session=session, delay=delay),
         "recruitee": RecruteeProvider(companies=c("recruitee"), session=session, delay=delay),
         "smartrecruiters": SmartRecruitersProvider(companies=c("smartrecruiters"), session=session, delay=delay),
+        "workday": WorkdayProvider(companies=c("workday"), session=session, delay=delay),
     }
 
 
