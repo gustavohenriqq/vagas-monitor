@@ -17,7 +17,7 @@ a cada visita e vazaria um referer do visitante para terceiros.
 | `remotive.svg` | remotive.com | marca da própria plataforma |
 | `wwr.svg` | weworkremotely.com | marca da própria plataforma |
 | `recruitee.svg` | recruitee.com | é a marca da **Tellent**, que comprou a Recruitee |
-| `smartrecruiters.svg` | smartrecruiters.com | lockup **SmartRecruiters + SAP**, que a comprou em set/2025; o site deles só publica essa versão |
+| `smartrecruiters.svg` | smartrecruiters.com | recortado, ver abaixo |
 
 ## Ajustes aplicados
 
@@ -30,6 +30,24 @@ a cada visita e vazaria um referer do visitante para terceiros.
   são forçados a branco por filtro CSS, senão sumiriam no fundo preto. Os
   coloridos ficam na cor original — inverter mataria a identidade da marca, e
   os que têm fundo próprio virariam um bloco branco sólido.
+
+## O recorte do SmartRecruiters
+
+A SAP comprou a SmartRecruiters em setembro de 2025, e desde então o site
+deles só publica o lockup conjunto — não há versão isolada (todos os caminhos
+para uma dão 404). Como a SAP não é uma fonte que o monitor consulta, a linha
+"An SAP company" foi removida do arquivo.
+
+O recorte foi cirúrgico e verificável: medindo a extensão vertical de cada
+traçado, os 15 primeiros formam o wordmark (y de 0,9 a 57,1) e o décimo sexto,
+sozinho, desenha a linha do SAP (y de 72,4 a 105,8). Só ele saiu, e o
+`viewBox` passou de 109 para 60 de altura. A proporção foi de 5,06 para 9,20,
+o que moveu o logo para a faixa de tamanho `xwide` no painel.
+
+Isso é alteração de marca de terceiro. O rótulo do card continua dizendo
+"ATS corporativo · SAP", então a informação não se perde.
+
+## Licença
 
 As marcas pertencem às respectivas empresas. O uso aqui é apenas para
 identificar a fonte de cada vaga.
