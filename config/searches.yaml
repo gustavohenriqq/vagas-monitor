@@ -62,6 +62,8 @@ inhire_companies:
   # o botão "Ver vagas" aponta para o tenant normal {empresa}.inhire.app:
   - v360
   - zetadados
+  - vintglobal      # Vint Global (TIC, Fortaleza) — confirmado
+  - labwarebrasil   # LabWare Brasil
 
 # Boards (empresas) do Greenhouse. O token é o trecho do link público:
 #   https://job-boards.greenhouse.io/<token>  ->  token = "coinbase"
