@@ -95,7 +95,7 @@ greenhouse_companies:
   - ebanx           # EBANX
   - vtex            # VTEX
   - thoughtworks    # Thoughtworks
-  - zenvia          # Zenvia
+  # Zenvia usa Gupy (zenvia.gupy.io), coberta pela busca global; Greenhouse retorna 404.
   # --- achadas cruzando os ATSs: falham no Lever, mas existem aqui ---
   - sumup           # SumUp (409)
   - gympass         # Gympass/Wellhub (85)
@@ -139,7 +139,6 @@ lever_companies:
   - matchgroup            # (75)
   - linkedin              # (23)
   - toptal                # (18)
-  - ledger                # (1)
   # Tokens válidos mas com board vazio hoje — descomente se voltarem a publicar:
   # - cloudwalk
   # - tractian
@@ -150,6 +149,7 @@ lever_companies:
   # - jobgether
 
 ashby_companies:
+  - ledger               # Ledger: portal oficial aponta para jobs.ashbyhq.com/ledger
   # --- Brasil ---
   - warren               # Warren (14) — BR
   - malga                # Malga (1) — BR
